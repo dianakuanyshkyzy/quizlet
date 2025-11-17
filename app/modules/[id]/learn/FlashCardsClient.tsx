@@ -16,7 +16,7 @@ export default function FlashcardsClient({ words }: { words: Word[] }) {
     <>
     <Header />
     
-    <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-60">
+    <main className="flex flex-col items-center justify-start pt-48 min-h-screen p-8 bg-gray-50">
       <div
         className="bg-white rounded-2xl shadow-md w-96 h-56 flex items-center justify-center text-2xl font-semibold cursor-pointer"
         onClick={() => setFlipped(!flipped)}
