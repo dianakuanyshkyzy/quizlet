@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { Word } from "@/data/mockModules";
 import Header from "@/components/Header";
+import { motion } from "framer-motion";
+
 
 
 type Question =
@@ -193,59 +195,85 @@ export default function TestPageClient({
               />
             )}
 
-            {current.type === "matching" && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Matching</h3>
-                <p className="text-sm text-gray-600 mb-4">Click a term on the left, then its translation on the right.</p>
+{current.type === "matching" && (
+  <div className="w-full max-w-2xl">
+    <h3 className="text-lg font-semibold mb-3">Matching</h3>
+    <p className="text-sm text-gray-600 mb-4">Click a term on the left, then its translation below.</p>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    {((current as any).pairs as Word[]).map((p) => (
-                      <button
-                        key={p.term}
-                        onClick={() => handleMatchSelectLeft(p.term)}
-                        className={`w-full text-left p-3 rounded-xl mb-2 border ${
-                          matchLeftSelected === p.term ? "border-[#4255FF] bg-[#eef2ff]" : "border-gray-200 bg-white"
-                        }`}
-                      >
-                        {p.term}
-                        <div className="text-sm text-gray-400">{matchPairsGiven[p.term] ? `(→ ${matchPairsGiven[p.term]})` : ""}</div>
-                      </button>
-                    ))}
-                  </div>
+    <div className="grid grid-cols-2 gap-4">
+      
+      <div>
+        {((current as any).pairs as Word[]).map((p) => (
+          <button
+            key={p.term}
+            onClick={() => handleMatchSelectLeft(p.term)}
+            className={`w-full text-left p-3 rounded-xl mb-2 border ${
+              matchLeftSelected === p.term ? "border-[#4255FF] bg-[#eef2ff]" : "border-gray-200 bg-white"
+            }`}
+          >
+            {p.term}
+            <div className="text-sm text-gray-400">
+            </div>
+          </button>
+        ))}
+      </div>
 
-                  <div>
-                    {matchRightOrder.map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => handleMatchSelectRight(t)}
-                        className="w-full text-left p-3 rounded-xl mb-2 border border-gray-200 bg-white"
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+      <div>
+        {((current as any).pairs as Word[]).map((p) => {
+          const assigned = matchPairsGiven[p.term];
+          return (
+            <motion.div key={p.term} layout className="h-[52px] mb-2 flex items-center">
+              {assigned && (
+                <motion.button
+                  layout
+                  onClick={() => handleMatchSelectRight(assigned)}
+                  className="w-full text-left p-3 rounded-xl border bg-[#eef2ff] border-[#4255FF]"
+                >
+                  {assigned}
+                </motion.button>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
 
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    className="px-4 py-2 border rounded"
-                    onClick={() => {
-                      setMatchPairsGiven({});
-                      setMatchLeftSelected(null);
-                    }}
-                  >
-                    Reset
-                  </button>
-                  <button
-                    onClick={submitMatching}
-                    className="px-4 py-2 bg-[#4255FF] text-white rounded"
-                  >
-                    Submit Matching
-                  </button>
-                </div>
-              </div>
-            )}
+    <div className="flex flex-wrap gap-3 mt-6 justify-center w-full">
+      {matchRightOrder
+        .filter((t) => !Object.values(matchPairsGiven).includes(t))
+        .map((t) => (
+          <motion.button
+            key={t}
+            layout
+            onClick={() => handleMatchSelectRight(t)}
+            className="px-4 py-3 min-w-[210px] text-center rounded-xl border border-gray-200 bg-white"
+          >
+            {t}
+          </motion.button>
+        ))}
+    </div>
+
+    <div className="flex justify-end gap-2 mt-6">
+      <button
+        className="px-4 py-2 border rounded"
+        onClick={() => {
+          setMatchPairsGiven({});
+          setMatchLeftSelected(null);
+        }}
+      >
+        Reset
+      </button>
+
+      <button
+        onClick={submitMatching}
+        className="px-4 py-2 bg-[#4255FF] text-white rounded"
+      >
+        Submit Matching
+      </button>
+    </div>
+  </div>
+)}
+
           </div>
         )}
 
@@ -281,6 +309,7 @@ export default function TestPageClient({
               >
                 Retry
               </button>
+              
             </div>
           </div>
         )}
@@ -289,7 +318,20 @@ export default function TestPageClient({
     </>
   );
 }
+/*
+<div>
+                    {matchRightOrder.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => handleMatchSelectRight(t)}
+                        className="w-full text-left p-3 rounded-xl mb-2 border border-gray-200 bg-white"
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
 
+*/
 function WrittenQuestion({ word, onSubmit }: { word: Word; onSubmit: (val: string) => void }) {
   const [val, setVal] = useState("");
   return (
