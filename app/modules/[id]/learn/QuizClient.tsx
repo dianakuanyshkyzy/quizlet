@@ -62,7 +62,6 @@ export default function QuizClient({ words }: { words: Word[] }) {
       <Header />
 
       <main className="flex flex-col items-center justify-start pt-24 min-h-screen p-8 bg-gray-50">
-
         {!finished && (
           <div className="w-full max-w-md mb-6">
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -115,6 +114,14 @@ export default function QuizClient({ words }: { words: Word[] }) {
             </div>
           </>
         )}
+        <div className="flex justify-center items-center">
+          <button
+            className="mt-4 px-4 py-2 bg-gray-300 text-black rounded-full"
+            onClick={() => (window.location.href = "/main")}
+          >
+            Home
+          </button>
+        </div>
       </main>
     </>
   );

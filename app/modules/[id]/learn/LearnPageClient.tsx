@@ -1,4 +1,3 @@
-
 "use client";
 
 import Header from "@/components/Header";
@@ -11,7 +10,9 @@ export default function LearnPageClient({ id }: { id: string }) {
     <>
       <Header />
       <main className="flex flex-col items-center justify-start pt-36 min-h-screen p-8 bg-gray-50">
-        <h1 className="text-3xl font-bold text-[#4255FF] mb-6">Choose your mode</h1>
+        <h1 className="text-3xl font-bold text-[#4255FF] mb-6">
+          Choose your mode
+        </h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
           <button

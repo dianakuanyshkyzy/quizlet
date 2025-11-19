@@ -14,38 +14,44 @@ export default function FlashcardsClient({ words }: { words: Word[] }) {
 
   return (
     <>
-    <Header />
-    
-    <main className="flex flex-col items-center justify-start pt-48 min-h-screen p-8 bg-gray-50">
-      <div
-        className="bg-white rounded-2xl shadow-md w-96 h-56 flex items-center justify-center text-2xl font-semibold cursor-pointer"
-        onClick={() => setFlipped(!flipped)}
-      >
-        {flipped ? current.translation : current.term}
-      </div>
+      <Header />
 
-      <div className="flex gap-4 mt-6">
-        <button
-          className="px-4 py-2 bg-[#4255FF] text-white rounded-full"
-          onClick={() => {
-            setFlipped(false);
-            setIndex((i) => Math.max(0, i - 1));
-          }}
+      <main className="flex flex-col items-center justify-start pt-48 min-h-screen p-8 bg-gray-50">
+        <div
+          className="bg-white rounded-2xl shadow-md w-96 h-56 flex items-center justify-center text-2xl font-semibold cursor-pointer"
+          onClick={() => setFlipped(!flipped)}
         >
-          Prev
-        </button>
+          {flipped ? current.translation : current.term}
+        </div>
 
+        <div className="flex gap-4 mt-6">
+          <button
+            className="px-4 py-2 bg-[#4255FF] text-white rounded-full"
+            onClick={() => {
+              setFlipped(false);
+              setIndex((i) => Math.max(0, i - 1));
+            }}
+          >
+            Prev
+          </button>
+
+          <button
+            className="px-4 py-2 bg-[#4255FF] text-white rounded-full"
+            onClick={() => {
+              setFlipped(false);
+              setIndex((i) => Math.min(words.length - 1, i + 1));
+            }}
+          >
+            Next
+          </button>
+        </div>
         <button
-          className="px-4 py-2 bg-[#4255FF] text-white rounded-full"
-          onClick={() => {
-            setFlipped(false);
-            setIndex((i) => Math.min(words.length - 1, i + 1));
-          }}
+          className="mt-4 px-4 py-2 bg-gray-300 text-black rounded-full"
+          onClick={() => (window.location.href = "/main")}
         >
-          Next
+          Home
         </button>
-      </div>
-    </main>
+      </main>
     </>
   );
 }
