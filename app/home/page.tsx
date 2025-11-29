@@ -15,10 +15,10 @@ export default function HomePage() {
         </p>
 
         <Link
-          href="/auth"
+          href="/login"
           className="bg-[#4255FF] text-white px-8 py-3 rounded-full text-lg font-semibold hover:scale-105 transition-transform duration-200"
         >
-          sign up
+          Login to Get Started
         </Link>
 
         <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-16 w-full px-8">
