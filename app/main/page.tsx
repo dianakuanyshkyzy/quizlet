@@ -29,31 +29,26 @@ export default function MainPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    async function loadModules() {
-      try {
-        const res = await fetch("https://imba-server.up.railway.app/modules", {
-          credentials: "include",
-        });
-
-        const data = await res.json();
-        console.log("LOGIN RESPONSE:", data);
-
-        console.log("MODULES RESPONSE:", data);
-
-        if (data.ok && Array.isArray(data.data)) {
-          setModules(data.data);
-        } else {
-          console.error("module data error", data);
-          setModules([]);
-        }
-      } catch (err) {
-        console.error("failed to load modules", err);
-      } finally {
-        setLoading(false);
+  const loadModules = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("https://imba-server.up.railway.app/modules", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.data)) {
+        setModules(data.data);
+      } else {
+        setModules([]);
       }
+    } catch (err) {
+      console.error("failed to load modules", err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     loadModules();
   }, []);
 
@@ -148,7 +143,10 @@ export default function MainPage() {
           ))}
         </div>
 
-        {showModal && <AddModuleModal onAdd={handleAddModule} />}
+        {showModal && <AddModuleModal onAdd={()=> {
+        setShowModal(false);
+        loadModules();
+        }}/>}
       </main>
     </>
   );

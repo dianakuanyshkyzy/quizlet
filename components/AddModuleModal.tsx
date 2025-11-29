@@ -39,18 +39,76 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
     setWords(newWords);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   onAdd({
+  //     title: name,
+  //     description: description,
+  //     isPrivate: false
+  //   });    
+  //   setName("");
+  //   setDescription("");
+  //   setNumWords(1);
+  //   setWords([{ term: "", translation: "" }]); 
+  //   //const createdModule = fetch from moduleId, then pass the information from the json with information to add words on endpoint post /terms with for loop
+  // };
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({
-      title: name,
-      description: description,
-      isPrivate: false
-    });    
-    setName("");
-    setDescription("");
-    setNumWords(1);
-    setWords([{ term: "", translation: "" }]);
+  
+    try {
+      // 1️⃣ create the module
+      const resModule = await fetch("https://imba-server.up.railway.app/modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: name,
+          description,
+          isPrivate: false
+        }),
+      });
+      const moduleData = await resModule.json();
+      if (!resModule.ok || !moduleData.ok) throw new Error("Module creation failed");
+  
+      const moduleId = moduleData.data.id; // get the created module ID
+  
+      // 2️⃣ create all words
+      for (const word of words) {
+        if (!word.term || !word.translation) continue; // skip empty fields
+  
+        await fetch("https://imba-server.up.railway.app/terms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            moduleId,
+            term: word.term,
+            definition: word.translation,
+            isStarred: false
+          }),
+        });
+      }
+  
+      // 3️⃣ optional: fetch all terms for confirmation
+      const resTerms = await fetch(`https://imba-server.up.railway.app/terms?moduleId=${moduleId}`, {
+        credentials: "include",
+      });
+      const termsData = await resTerms.json();
+      console.log("All terms for module:", termsData);
+  
+      // 4️⃣ reset modal state
+      setName("");
+      setDescription("");
+      setNumWords(1);
+      setWords([{ term: "", translation: "" }]);
+  
+      onAdd(null); // notify parent to refresh modules
+  
+    } catch (err) {
+      console.error(err);
+    }
   };
+  
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
