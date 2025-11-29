@@ -7,16 +7,17 @@ type Word = {
   translation: string;
 };
 
-type Module = {
-  id: number;
-  name: string;
+type CreateModule = {
+  title: string;
   description: string;
-  words: Word[];
+  isPrivate: boolean;
 };
 
+
 type AddModuleModalProps = {
-  onAdd: (module: Module | null) => void;
+  onAdd: (data: CreateModule | null) => void;
 };
+
 
 export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
   const [name, setName] = useState("");
@@ -41,12 +42,10 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAdd({
-      id: Date.now(),
-      name,
-      description,
-      words,
-    });
-    // reset
+      title: name,
+      description: description,
+      isPrivate: false
+    });    
     setName("");
     setDescription("");
     setNumWords(1);
@@ -72,14 +71,7 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
           onChange={(e) => setDescription(e.target.value)}
           className="w-full p-2 border rounded mb-2"
         />
-        <input
-          type="number"
-          min={1}
-          placeholder="Number of Words"
-          value={numWords}
-          onChange={(e) => handleNumWordsChange(Number(e.target.value))}
-          className="w-full p-2 border rounded mb-4"
-        />
+        
 
         {words.map((word, idx) => (
           <div key={idx} className="flex gap-2 mb-2">
@@ -104,7 +96,10 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
           <button type="submit" className="bg-[#4255FF] text-white py-2 px-4 rounded">
             Add Module
           </button>
-          <button type="button" className="py-2 px-4 rounded" onClick={() => onAdd(null)}>
+          <button type="button" className="border-1 border-gray-300 py-2 px-4 rounded" onClick={() => handleNumWordsChange(numWords + 1)}>
+            Add word
+          </button>
+          <button type="button" className="border-1 border-gray-300 py-2 px-4 rounded" onClick={() => onAdd(null)}>
             Cancel
           </button>
         </div>

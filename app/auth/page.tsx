@@ -8,22 +8,53 @@ import Header from "@/components/Header";
 export default function AuthPage() {
   const [isSignup, setIsSignup] = useState(false);
   const router = useRouter();
-  const fakeUser = {
-    email: "test@example.com",
-    password: "123456",
-  };
+  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const handleSubmit = (e: React.FormEvent) => {
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (email === fakeUser.email && password === fakeUser.password) {
+  //     router.push("/main");
+  //   } else {
+  //     setError("Invalid email or password");
+  //   }
+  // };
+  const [name, setName] = useState("");
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === fakeUser.email && password === fakeUser.password) {
+    setError("");
+  
+    try {
+      const url = isSignup
+        ? "https://imba-server.up.railway.app/auth/register"
+        : "https://imba-server.up.railway.app/auth/login";
+  
+      const bodyData = isSignup
+        ? { name, email, password }
+        : { email, password };
+  
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
+        credentials: "include",
+      });
+  
+      const data = await res.json();
+      console.log("AUTH RESPONSE:", data);
+  
+      if (!data.ok) {
+        throw new Error(data.message || "Authentication failed");
+      }
       router.push("/main");
-    } else {
-      setError("Invalid email or password");
+    } catch (err: any) {
+      setError(err.message);
     }
   };
+  
+
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -37,9 +68,12 @@ export default function AuthPage() {
               <input
                 type="text"
                 placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
               />
             )}
+
             <input
               type="email"
               placeholder="Email"
