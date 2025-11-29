@@ -1,40 +1,55 @@
-import Header from "@/components/Header";
-export default function AccountPage() {
+"use client"
+
+import { useState } from "react"
+import ProfileSection from "@/components/settings/profile-section"
+import EditProfileForm from "@/components/settings/edit-profile-form"
+import PasswordChangeForm from "@/components/settings/password-change-form"
+import DeleteAccountSection from "@/components/settings/delete-account-section"
+
+interface UserData {
+  name: string
+  email: string
+  status: string
+}
+
+export default function SettingsPage() {
+  const [userData, setUserData] = useState<UserData>({
+    name: "John Doe",
+    email: "john@example.com",
+    status: "Active",
+  })
+
+  const [isEditing, setIsEditing] = useState(false)
+
+  const handleUpdateProfile = (updatedData: Partial<UserData>) => {
+    setUserData((prev) => ({ ...prev, ...updatedData }))
+    setIsEditing(false)
+  }
+
   return (
-    <>
-      <Header />
-      <div className="w-full max-w-xl mx-auto p-6 flex flex-col gap-6 mt-24">
-        <h1 className="text-2xl font-semibold">Account Settings</h1>
+    <main className="min-h-screen bg-gradient-to-br from-background to-secondary/20 py-8 px-4">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-foreground">Account Settings</h1>
+          <p className="mt-2 text-muted-foreground">Manage your account information and preferences</p>
+        </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-18 p-5 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-gray-500 text-sm">
-              img
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="border p-3 rounded-lg w-full"
-            />
-          </div>
+        <div className="space-y-6">
+          {/* Profile Section */}
+          <ProfileSection userData={userData} isEditing={isEditing} setIsEditing={setIsEditing} />
 
-          <input
-            type="text"
-            placeholder="Name"
-            className="border p-3 rounded-xl w-full"
-          />
+          {/* Edit Profile Form */}
+          {isEditing && (
+            <EditProfileForm userData={userData} onSubmit={handleUpdateProfile} onCancel={() => setIsEditing(false)} />
+          )}
 
-          <input
-            type="text"
-            placeholder="Surname"
-            className="border p-3 rounded-xl w-full"
-          />
+          {/* Password Change Form */}
+          <PasswordChangeForm />
 
-          <button className="bg-[#4255FF] text-white rounded-xl py-3 text-lg hover:opacity-80 transition">
-            Save
-          </button>
+          {/* Delete Account Section */}
+          <DeleteAccountSection />
         </div>
       </div>
-    </>
-  );
+    </main>
+  )
 }

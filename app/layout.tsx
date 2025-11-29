@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Imba Quizlet",
+  title: "Imba Learn",
   description: "Test your skills",
 };
 

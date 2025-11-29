@@ -10,7 +10,7 @@ export default function HomePage() {
         </h1>
 
         <p className="text-center text-lg md:text-xl max-w-2xl mb-8">
-          Master whatever you’re learning with Imba Quizlet’s interactive
+          Master whatever you’re learning with Imba Learn’s interactive
           flashcards, practice tests and study activities.
         </p>
 
