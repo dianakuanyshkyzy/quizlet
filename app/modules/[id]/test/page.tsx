@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import type { Word } from "@/data/mockModules";
 import Header from "@/components/Header";
 import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
