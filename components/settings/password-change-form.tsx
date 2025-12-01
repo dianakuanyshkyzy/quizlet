@@ -37,9 +37,7 @@ export default function PasswordChangeForm() {
     }
     if (!formData.newPassword) {
       newErrors.newPassword = "New password is required"
-    } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = "Password must be at least 8 characters"
-    }
+    } 
     if (formData.newPassword !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match"
     }
@@ -49,35 +47,59 @@ export default function PasswordChangeForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) return
-
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setSuccess(true)
-    setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" })
-    setIsLoading(false)
-
-    // Reset success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000)
-  }
+    e.preventDefault();
+  
+    if (!validateForm()) return; 
+    setIsLoading(true);
+    setSuccess(false);
+  
+    try {
+      const res = await fetch("https://imba-server.up.railway.app/users/me/change-password", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          oldPassword: formData.oldPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        setErrors({ oldPassword: data.message || "Failed to change password" });
+      } else {
+        setSuccess(true);
+        setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Change password error:", err);
+      setErrors({ oldPassword: "Network error, try again" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  
 
   const togglePasswordVisibility = (field: "old" | "new" | "confirm") => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
   return (
-    <Card className="border-0 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 pb-4">
-        <CardTitle>Change Password</CardTitle>
-        <CardDescription>Update your password to keep your account secure</CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Card className="border-0 shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-r from-[#4255ff]/5 to-accent/5 -m-6 p-6 mb-0">
+        <CardHeader className="p-0 ml-6">
+          <CardTitle className="text-2xl">Change Password</CardTitle>
+          <CardDescription>Update your password to keep your account secure</CardDescription>
+        </CardHeader>
+      </div>
+      <CardContent className="pt-8 pb-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="text-sm font-medium text-foreground">Current Password</label>
             <div className="relative mt-2">
@@ -157,7 +179,7 @@ export default function PasswordChangeForm() {
             </div>
           )}
 
-          <div className="pt-4">
+          <div className="pt-6">
             <Button
               type="submit"
               disabled={isLoading || success}

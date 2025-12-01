@@ -10,10 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X } from "lucide-react"
 
 interface UserData {
-  name: string
-  email: string
-  status: string
-}
+    id:string
+    name: string
+    email: string
+    status: string
+    role: string
+    createdAt: string
+    updatedAt: string
+  }
 
 interface EditProfileFormProps {
   userData: UserData
@@ -33,22 +37,20 @@ export default function EditProfileForm({ userData, onSubmit, onCancel }: EditPr
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800))
 
     onSubmit(formData)
     setIsLoading(false)
   }
 
   return (
-    <Card className="border-0 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 pb-4">
+    <Card className="border-0 shadow-lg overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-[#4255ff]/5 to-accent/5 pb-4 -m-6 p-6 mb-0">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Edit Profile</CardTitle>
+          <div className="ml-6">
+            <CardTitle className="text-2xl ">Edit profile</CardTitle>
             <CardDescription>Update your account information</CardDescription>
           </div>
-          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onCancel} className="mr-6 text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>

@@ -7,6 +7,7 @@ import AddModuleModal from "@/components/AddModuleModal";
 import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
 
+
 type Module = {
   id: string;
   slug: string;
@@ -29,6 +30,26 @@ export default function MainPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  const handleDeleteModule = async (id: string) => {
+    try {
+      const res = await fetch(`https://imba-server.up.railway.app/modules/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok || !data.ok) {
+        console.error("delete failed", data);
+        return;
+      }
+  
+      setModules((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      console.error("delete error", err);
+    }
+  };
+  
   const loadModules = async () => {
     setLoading(true);
     try {
@@ -51,7 +72,29 @@ export default function MainPage() {
   useEffect(() => {
     loadModules();
   }, []);
-
+  const handleUpdateModule = async (id: string, data: { title: string; description: string; isPrivate: boolean }) => {
+    try {
+      const res = await fetch(`https://imba-server.up.railway.app/modules/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+  
+      const result = await res.json();
+      if (!res.ok || !result.ok) {
+        console.error("update failed", result);
+        return;
+      }
+  
+      setModules((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, ...data } : m))
+      );
+    } catch (err) {
+      console.error("update error", err);
+    }
+  };
+  
   const handleAddModule = async (moduleData: CreateModule | null) => {
     if (!moduleData) {
       setShowModal(false);
@@ -81,6 +124,7 @@ export default function MainPage() {
       console.error(err);
     }
   };
+
   if (loading) {
     return (
       <>
@@ -139,7 +183,14 @@ export default function MainPage() {
 
         <div className="flex flex-col">
           {filteredModules.map((m) => (
-            <ModuleListItem key={m.id} module={m} onClick={handleModuleClick} />
+            <ModuleListItem 
+            key={m.id}
+             module={m} 
+             onClick={handleModuleClick}
+             onDelete={handleDeleteModule}
+             onUpdate={handleUpdateModule}
+
+             />
           ))}
         </div>
 

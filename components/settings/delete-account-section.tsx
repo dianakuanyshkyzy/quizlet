@@ -11,33 +11,50 @@ export default function DeleteAccountSection() {
   const [confirmText, setConfirmText] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleDeleteAccount = async () => {
-    if (confirmText !== "DELETE MY ACCOUNT") return
+ 
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (confirmText !== "DELETE MY ACCOUNT") return
+      setIsLoading(true)
+      
+    
+      try {
+        const res = await fetch("https://imba-server.up.railway.app/users/me", {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+    
+        const data = await res.json();
+        if (res.ok) {
+          window.location.href = "/"
+        }
+      } catch (error) {
+        console.error("Failed to delete account:", error);
+      } finally {
+        setIsLoading(false);
+      }
 
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // In a real app, this would redirect to login or home page
-    console.log("Account deleted")
-    setIsLoading(false)
-  }
+    };
 
   return (
-    <Card className="border-destructive/50 shadow-lg">
-      <CardHeader className="bg-destructive/5 pb-4">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="h-5 w-5 text-destructive" />
-          <div>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions</CardDescription>
+    <Card className="border-destructive/50 shadow-lg overflow-hidden">
+      <div className="bg-destructive/5 -m-6 p-6 mb-0">
+        <CardHeader className="p-0">
+          <div className="flex items-center gap-3 ml-6">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <div>
+              <CardTitle className="text-destructive text-2xl">Danger Zone</CardTitle>
+              <CardDescription>Irreversible actions</CardDescription>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
+        </CardHeader>
+      </div>
+      <CardContent className="pt-8 pb-8">
         {!showDeleteConfirm ? (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="font-semibold text-foreground">Delete Account</h3>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -49,7 +66,7 @@ export default function DeleteAccountSection() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+          <div className="space-y-4 rounded-lg border border-destructive/20 bg-destructive/5 p-6">
             <div>
               <h4 className="font-semibold text-destructive">Are you absolutely sure?</h4>
               <p className="mt-2 text-sm text-foreground">
