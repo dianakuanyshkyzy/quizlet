@@ -4,13 +4,24 @@ import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Star, ArrowLeft } from "lucide-react";
 
 export default function LearnPageClient({ id }: { id: string }) {
   const [moduleData, setModuleData] = useState<any | null>(null);
-  const [termsData, setTermsData] = useState<any | null>(null);
   const [termsList, setTermsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [addingNew, setAddingNew] = useState(false);
+  const [newTerm, setNewTerm] = useState("");
+  const [newDef, setNewDef] = useState("");
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTermValue, setEditTermValue] = useState("");
+  const [editDefValue, setEditDefValue] = useState("");
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     let mounted = true;
@@ -20,42 +31,28 @@ export default function LearnPageClient({ id }: { id: string }) {
       try {
         const res = await fetch(
           `https://imba-server.up.railway.app/modules/${id}`,
-          {
-            credentials: "include",
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+          { credentials: "include" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (mounted) setModuleData(data);
       } catch (err: any) {
-        if (mounted) setError(err.message ?? "Failed to load module");
-      } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setError(err.message);
       }
 
       const terms = await fetch(
         `https://imba-server.up.railway.app/terms?moduleId=${id}`,
-        {
-          credentials: "include",
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { credentials: "include" }
       );
       if (terms.ok) {
-        const termsDataRes = await terms.json();
+        const t = await terms.json();
         if (mounted) {
-          setTermsData(termsDataRes);
-          // normalize local list for UI interactions
-          const list = termsDataRes?.data?.data || [];
+          const list = t?.data?.data || [];
           setTermsList(list);
         }
       }
+
+      if (mounted) setLoading(false);
     })();
 
     return () => {
@@ -63,45 +60,82 @@ export default function LearnPageClient({ id }: { id: string }) {
     };
   }, [id]);
 
-  const router = useRouter();
-
   function toggleStar(termId: string) {
     setTermsList((prev) =>
       prev.map((t) => (t.id === termId ? { ...t, isStarred: !t.isStarred } : t))
     );
   }
 
-  function cycleStatus(termId: string) {
-    setTermsList((prev) =>
-      prev.map((t) => {
-        if (t.id !== termId) return t;
-        const order = ["not_started", "in_progress", "completed"];
-        const idx = order.indexOf(t.status);
-        const next = order[(idx + 1) % order.length];
-        return { ...t, status: next };
-      })
-    );
+  async function submitNewTerm() {
+    if (!newTerm.trim() || !newDef.trim()) return;
+
+    const res = await fetch(`https://imba-server.up.railway.app/terms`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        term: newTerm,
+        definition: newDef,
+        moduleId: id,
+        isStarred: false,
+      }),
+    });
+
+    if (!res.ok) return;
+
+    const created = await res.json();
+
+    setTermsList((prev) => [...prev, created.data]);
+    setNewTerm("");
+    setNewDef("");
+    setAddingNew(false);
+  }
+  async function deleteTerm(termId: string) {
+    await fetch(`https://imba-server.up.railway.app/terms/${termId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    setTermsList((prev) => prev.filter((t) => t.id !== termId));
+    setOpenDropdownId(null);
+  }
+  function startEditing(term: any) {
+    setEditingId(term.id);
+    setEditTermValue(term.term);
+    setEditDefValue(term.definition);
   }
 
-  function editTerm(termId: string) {
-    const term = termsList.find((t) => t.id === termId);
-    if (!term) return;
-    const newTerm = prompt("Edit term", term.term);
-    if (newTerm === null) return; // cancelled
-    const newDef = prompt("Edit definition", term.definition);
-    if (newDef === null) return;
+  async function submitEdit(termId: string) {
+    const res = await fetch(
+      `https://imba-server.up.railway.app/terms/${termId}`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          term: editTermValue,
+          definition: editDefValue,
+        }),
+      }
+    );
+
+    if (!res.ok) return;
+
     setTermsList((prev) =>
       prev.map((t) =>
-        t.id === termId ? { ...t, term: newTerm, definition: newDef } : t
+        t.id === termId
+          ? { ...t, term: editTermValue, definition: editDefValue }
+          : t
       )
     );
+
+    setEditingId(null);
   }
 
   return (
     <>
       <Header />
 
-      <main className="flex flex-col items-center justify-start min-h-screen p-8 bg-gray-50">
+      <main className="flex flex-col items-center min-h-screen bg-gray-50 relative p-8 pb-20">
         <div className="w-full max-w-4xl mb-8">
           {loading ? (
             <div className="rounded-2xl">Loading module…</div>
@@ -109,7 +143,7 @@ export default function LearnPageClient({ id }: { id: string }) {
             <div className="p-6 bg-red-50 text-red-700 rounded-2xl">
               {error}
             </div>
-          ) : moduleData && moduleData.data ? (
+          ) : moduleData?.data ? (
             <div className="rounded-2xl">
               <h1 className="text-4xl font-bold text-[#4255FF]">
                 {moduleData.data.title}
@@ -131,7 +165,7 @@ export default function LearnPageClient({ id }: { id: string }) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
           <button
-            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl transition flex flex-col items-center"
+            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl flex flex-col items-center"
             onClick={() => router.push(`/modules/${id}/flashcards`)}
           >
             <Image
@@ -144,7 +178,7 @@ export default function LearnPageClient({ id }: { id: string }) {
           </button>
 
           <button
-            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl transition flex flex-col items-center"
+            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl flex flex-col items-center"
             onClick={() => router.push(`/modules/${id}/quiz`)}
           >
             <Image src="/images/img1.png" width={150} height={150} alt="Quiz" />
@@ -152,7 +186,7 @@ export default function LearnPageClient({ id }: { id: string }) {
           </button>
 
           <button
-            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl transition flex flex-col items-center"
+            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl flex flex-col items-center"
             onClick={() => router.push(`/modules/${id}/test`)}
           >
             <Image src="/images/img4.png" width={150} height={150} alt="Test" />
@@ -160,74 +194,142 @@ export default function LearnPageClient({ id }: { id: string }) {
           </button>
         </div>
 
-        {/* Terms list */}
         <div className="w-full max-w-4xl mt-10">
           <h3 className="text-2xl font-semibold mb-4">Terms</h3>
-          {termsList.length === 0 ? (
-            <div className="p-4 bg-white rounded-2xl shadow-sm">
-              No terms yet.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {termsList.map((t) => (
-                <div
-                  key={t.id}
-                  className=" bg-white rounded-2xl shadow-md h-16 w-full flex"
-                >
-                  <div
-                    className={`w-3 h-full rounded-full ${
-                      t.status === "completed"
-                        ? "bg-green-100 text-green-800"
-                        : t.status === "in_progress"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  ></div>
 
-                  <div className="flex-1 p-4 flex flex-row ">
-                    <div className="flex-1">
-                      <div className="flex justify-start gap-5">
-                        <div className="font-semibold text-lg w-1/4">
-                          {t.term}
-                        </div>
-                        <div className="bg-gray-300 w-1 h-6 rounded-full"></div>
-                        <div className="font-semibold text-lg">
-                          {t.definition}
-                        </div>
+          {termsList.map((t) => (
+            <div
+              key={t.id}
+              className="bg-white rounded-2xl shadow-md h-16 w-full flex p-4 mb-2 items-center"
+            >
+              <div
+                className={`size-4 rounded-full ${
+                  t.status === "completed"
+                    ? "bg-green-100 text-green-800"
+                    : t.status === "in_progress"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              ></div>
+
+              <div className="flex-1 ml-4">
+                {editingId === t.id ? (
+                  <div className="flex gap-4 items-center">
+                    <input
+                      className="p-2  rounded-lg flex-1"
+                      value={editTermValue}
+                      onChange={(e) => setEditTermValue(e.target.value)}
+                    />
+                    <input
+                      className="p-2  rounded-lg flex-1"
+                      value={editDefValue}
+                      onChange={(e) => setEditDefValue(e.target.value)}
+                    />
+
+                    <button
+                      onClick={() => submitEdit(t.id)}
+                      className="px-5 py-2 bg-blue-500 text-white rounded-xl text-sm"
+                    >
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-3">
+                      <div className="font-semibold text-lg">{t.term}</div>
+                      <div className="w-1 bg-gray-300 rounded-full"></div>
+                      <div className="font-semibold text-lg">
+                        {t.definition.slice(0, 40)}
+                        {t.definition.length > 30 ? "..." : ""}
                       </div>
                     </div>
 
-                    <div className="mt-4 md:mt-0 md:ml-6 flex items-center gap-3">
-                      <button
-                        onClick={() => editTerm(t.id)}
-                        className="px-6 py-2 bg-blue-500 text-white rounded-2xl text-sm"
-                      >
-                        Edit
-                      </button>
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setOpenDropdownId(
+                              openDropdownId === t.id ? null : t.id
+                            )
+                          }
+                          className="px-5 py-2 bg-blue-500 text-white rounded-xl text-sm"
+                        >
+                           Options
+                        </button>
 
-                      <button
-                        aria-label={t.isStarred ? "Unstar" : "Star"}
-                        onClick={() => toggleStar(t.id)}
-                        className="text-2xl"
-                      >
-                        {t.isStarred ? "★" : "☆"}
+                        {openDropdownId === t.id && (
+                          <div className="p-2 absolute right-0 top-full mt-2 bg-white border rounded shadow-md flex flex-col w-28 z-10">
+                            <button
+                              onClick={() => startEditing(t)}
+                              className="p-2 hover:bg-gray-100 text-left"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteTerm(t.id)}
+                              className="p-2 hover:bg-gray-100 text-left text-red-600"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <button onClick={() => toggleStar(t.id)}>
+                        {t.isStarred ? (
+                          <Star
+                            className="text-yellow-500"
+                            fill="currentColor"
+                          />
+                        ) : (
+                          <Star className="text-gray-400" />
+                        )}
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div className=" bg-white rounded-2xl shadow-md h-16 w-full flex justify-center items-center font-semibold cursor-pointer">
-                Add New Term
+                )}
               </div>
+            </div>
+          ))}
+
+          {addingNew ? (
+            <div className="bg-white rounded-2xl shadow-md w-full p-4 mt-4 flex gap-4 items-center">
+              <input
+                placeholder="Term"
+                className="p-2  rounded-lg flex-1"
+                value={newTerm}
+                onChange={(e) => setNewTerm(e.target.value)}
+              />
+              <input
+                placeholder="Definition"
+                className="p-2  rounded-lg flex-1"
+                value={newDef}
+                onChange={(e) => setNewDef(e.target.value)}
+              />
+
+              <button
+                onClick={submitNewTerm}
+                className="px-6 py-2 bg-green-500 text-white rounded-xl text-sm"
+              >
+                Submit
+              </button>
+            </div>
+          ) : (
+            <div
+              className="bg-white rounded-2xl shadow-md h-16 w-full mt-4 flex justify-center items-center font-semibold cursor-pointer"
+              onClick={() => setAddingNew(true)}
+            >
+              Add New Term
             </div>
           )}
         </div>
-        <div>
+
+        <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
           <button
-            className="mt-8 bg-white p-5 rounded-2xl shadow-md"
             onClick={() => router.push("/main")}
+            className="ml-8 text-black flex items-center gap-2 text-lg"
           >
-            Back to Modules
+            <ArrowLeft size={20} /> Back to modules
           </button>
         </div>
       </main>

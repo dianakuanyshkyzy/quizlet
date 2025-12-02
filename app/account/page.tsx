@@ -36,7 +36,7 @@ export default function AccountPage() {
       if (res.ok) {
         setUserData(data.data);
       } else {
-        router.push("/auth");
+        router.push("/login");
       }
     } catch (err) {
       console.error("error loading user", err);
@@ -74,7 +74,7 @@ export default function AccountPage() {
   };
   useEffect(() => {
     if (!loading && !userData) {
-      router.push("/auth");
+      router.push("/login");
     }
   }, [loading, userData]);
   

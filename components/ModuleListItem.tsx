@@ -29,7 +29,7 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
   });
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 transition mb-4">
+    <div className="w-full  rounded-2xl h-16 bg-white rounded-xl shadow-md p-4 transition mb-4 hover:shadow-xl cursor-pointer transition w-full"> 
       <div className="flex items-center justify-between">
         <div
           className="cursor-pointer hover:underline"
@@ -37,6 +37,7 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
         >
           {module.title}
         </div>
+
 
         <div className="flex gap-4">
           <Edit2
@@ -57,6 +58,7 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
           }}
         />
       </div>
+      
       </div>
 
       {confirming && (

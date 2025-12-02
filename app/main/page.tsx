@@ -174,14 +174,14 @@ export default function MainPage() {
             <input
               type="text"
               placeholder="Search modules..."
-              className="flex-1 p-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4255FF]"
+              className="flex-1 p-2 border border-gray-400  rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4255FF]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col font-semibold text-lg">
           {filteredModules.map((m) => (
             <ModuleListItem 
             key={m.id}

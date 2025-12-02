@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 
 function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -153,12 +154,12 @@ export default function QuizClient() {
             </div>
           </>
         )}
-        <div className="flex justify-center items-center">
+       <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
           <button
-            className="mt-4 px-4 py-2 bg-gray-300 text-black rounded-full"
             onClick={() => (window.location.href = `/modules/${moduleId}`)}
+            className="ml-8 text-black flex items-center gap-2 text-lg"
           >
-            Home
+            <ArrowLeft size={20} /> Back to terms
           </button>
         </div>
       </main>
