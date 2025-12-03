@@ -22,6 +22,32 @@ export default function FlashcardsClient() {
   const [flipped, setFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [moduleInfo, setModuleInfo] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
+  useEffect(() => {
+    async function loadModule() {
+      try {
+        const res = await fetch(
+          `https://imba-server.up.railway.app/modules/${moduleId}`,
+          { credentials: "include" }
+        );
+        const data = await res.json();
+        if (data.ok && data.data) {
+          setModuleInfo({
+            title: data.data.title,
+            description: data.data.description,
+          });
+        }
+      } catch (err) {
+        console.error("failed to load module info", err);
+      }
+    }
+
+    if (moduleId) loadModule();
+  }, [moduleId]);
+
   function shuffleArray(arr: any[]) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -32,9 +58,13 @@ export default function FlashcardsClient() {
   }
   async function toggleStar(word: Word) {
     try {
-      await fetch(`https://imba-server.up.railway.app/terms/${word.id}/star`, {
+      await fetch(`https://imba-server.up.railway.app/terms/${word.id}`, {
         method: "PATCH",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isStarred: !word.isStarred,
+        }),
       });
 
       setWords((prev) =>
@@ -62,7 +92,7 @@ export default function FlashcardsClient() {
       if (!data.ok) console.error("status update error", data);
 
       setWords((prev) =>
-        prev.map((w) => (w.id === id ? { ...w, status: "learned" } : w))
+        prev.map((w) => (w.id === id ? { ...w, status: "completed" } : w))
       );
     } catch (err) {
       console.error("failed to update status", err);
@@ -119,95 +149,106 @@ export default function FlashcardsClient() {
   return (
     <>
       <Header />
+      <main className="overflow-x-hidden bg-gray-100 min-h-screen">
+        {moduleInfo && (
+          <div className="text-[#4255FF] pt-10 mb-8 max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold">{moduleInfo.title}</h1>
+            <p className="text-gray-600 mt-4">{moduleInfo.description}</p>
+          </div>
+        )}
+        <div className="flex flex-col items-center">
+          <hr className=" w-full max-w-4xl mb-8 border-gray-300" />
+        </div>
 
-      <main className="flex flex-col items-center justify-start pt-40 min-h-screen p-6 bg-gray-100">
-        <div className="relative w-[550px] h-[360px] perspective">
-          <button
-            className="absolute top-3 left-14 z-20 text-gray-500"
-            onClick={() => speak(current.term)}
-          >
-            <Volume2 size={26} />
-          </button>
-          <button
-            className="absolute top-3 right-3 z-20"
-            onClick={() => toggleStar(current)}
-          >
-            <Star
-              size={28}
-              className={
-                current.isStarred
-                  ? "text-yellow-400 fill-yellow-400"
-                  : "text-gray-400"
-              }
-            />
-          </button>
+        <div className="flex flex-col items-center justify-start pt-10 p-6 flex-1">
+          <div className="relative w-full max-w-[650px] h-[60vh] sm:h-[400px] perspective">
+            <button
+              className="absolute top-3 left-14 z-20 text-gray-500"
+              onClick={() => speak(current.term)}
+            >
+              <Volume2 size={26} />
+            </button>
+            <button
+              className="absolute top-3 right-3 z-20"
+              onClick={() => toggleStar(current)}
+            >
+              <Star
+                size={28}
+                className={
+                  current.isStarred
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-400"
+                }
+              />
+            </button>
 
-          <button
-            className="absolute top-3 left-3 z-20 text-gray-500"
-            onClick={() => setShowHint((v) => !v)}
-          >
-            <Lightbulb size={26} />
-          </button>
+            <button
+              className="absolute top-3 left-3 z-20 text-gray-500"
+              onClick={() => setShowHint((v) => !v)}
+            >
+              <Lightbulb size={26} />
+            </button>
 
-          {showHint && (
-            <div className="absolute top-12 left-3 z-20 bg-white px-3 py-2 rounded-xl shadow text-sm text-gray-600">
-              {getHint(current.definition)}
-            </div>
-          )}
+            {showHint && (
+              <div className="absolute top-12 left-3 z-20 bg-white px-3 py-2 rounded-xl shadow text-sm text-gray-600">
+                {getHint(current.definition)}
+              </div>
+            )}
 
-          <div
-            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
-              flipped ? "rotate-y-180" : ""
-            }`}
-            onClick={() => setFlipped(!flipped)}
-          >
-            <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex items-center justify-center text-4xl font-semibold backface-hidden p-6">
-              {current.term}
-            </div>
+            <div
+              className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
+                flipped ? "rotate-y-180" : ""
+              }`}
+              onClick={() => setFlipped(!flipped)}
+            >
+              <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex items-center justify-center text-4xl font-semibold backface-hidden p-6">
+                {current.term}
+              </div>
 
-            <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex items-center justify-center text-2xl p-8 rotate-y-180 backface-hidden">
-              {current.definition}
+              <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex items-center justify-center text-2xl p-8 rotate-y-180 backface-hidden">
+                {current.definition}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex gap-4 mt-8">
-          <button
-            className="px-5 py-2 bg-[#4255FF] text-white rounded-full"
-            onClick={() => {
-              if (flipped) {
-                markTermAsStudied(current.id);
-              }
-              setFlipped(false);
-              setShowHint(false);
-              setIndex((i) => Math.max(0, i - 1));
-            }}
-          >
-            Prev
-          </button>
+          <div className="flex gap-4 mt-8">
+            <button
+              className="px-5 py-2 bg-[#4255FF] text-white rounded-full"
+              onClick={() => {
+                if (flipped) {
+                  markTermAsStudied(current.id);
+                }
+                setFlipped(false);
+                setShowHint(false);
+                setIndex((i) => Math.max(0, i - 1));
+              }}
+            >
+              Prev
+            </button>
 
-          <button
-            className="px-5 py-2 bg-[#4255FF] text-white rounded-full"
-            onClick={() => {
-              if (flipped) {
-                markTermAsStudied(current.id);
-              }
-              setFlipped(false);
-              setShowHint(false);
-              setIndex((i) => Math.min(words.length - 1, i + 1));
-            }}
-          >
-            Next
-          </button>
-        </div>
+            <button
+              className="px-5 py-2 bg-[#4255FF] text-white rounded-full"
+              onClick={() => {
+                if (flipped) {
+                  markTermAsStudied(current.id);
+                }
+                setFlipped(false);
+                setShowHint(false);
+                setIndex((i) => Math.min(words.length - 1, i + 1));
+              }}
+            >
+              Next
+            </button>
+          </div>
 
-        <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
-          <button
-            onClick={() => (window.location.href = `/modules/${moduleId}`)}
-            className="ml-8 text-black flex items-center gap-2 text-lg"
-          >
-            <ArrowLeft size={20} /> Back to terms
-          </button>
+          <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
+            <button
+              onClick={() => (window.location.href = `/modules/${moduleId}`)}
+              className="ml-8 text-black flex items-center gap-2 text-lg"
+            >
+              <ArrowLeft size={20} /> Back to terms
+            </button>
+          </div>
         </div>
       </main>
 

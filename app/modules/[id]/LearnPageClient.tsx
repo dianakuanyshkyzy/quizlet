@@ -60,11 +60,29 @@ export default function LearnPageClient({ id }: { id: string }) {
     };
   }, [id]);
 
-  function toggleStar(termId: string) {
-    setTermsList((prev) =>
-      prev.map((t) => (t.id === termId ? { ...t, isStarred: !t.isStarred } : t))
+  async function toggleStar(term: any) {
+  try {
+    // send request to backend
+    await fetch(`https://imba-server.up.railway.app/terms/${term.id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isStarred: !term.isStarred,
+      }),
+    });
+
+    // update UI
+    setTermsList(prev =>
+      prev.map(t =>
+        t.id === term.id ? { ...t, isStarred: !t.isStarred } : t
+      )
     );
+  } catch (err) {
+    console.error("star error", err);
   }
+}
+
 
   async function submitNewTerm() {
     if (!newTerm.trim() || !newDef.trim()) return;
@@ -275,7 +293,7 @@ export default function LearnPageClient({ id }: { id: string }) {
                         )}
                       </div>
 
-                      <button onClick={() => toggleStar(t.id)}>
+                      <button onClick={() => toggleStar(t)}>
                         {t.isStarred ? (
                           <Star
                             className="text-yellow-500"

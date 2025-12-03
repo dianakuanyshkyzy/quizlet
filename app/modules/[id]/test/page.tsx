@@ -33,6 +33,32 @@ export default function TestPageClient() {
   const [matchPairsGiven, setMatchPairsGiven] = useState<
     Record<string, string>
   >({});
+  const [moduleInfo, setModuleInfo] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
+  useEffect(() => {
+    async function loadModule() {
+      try {
+        const res = await fetch(
+          `https://imba-server.up.railway.app/modules/${moduleId}`,
+          { credentials: "include" }
+        );
+        const data = await res.json();
+        if (data.ok && data.data) {
+          setModuleInfo({
+            title: data.data.title,
+            description: data.data.description,
+          });
+        }
+      } catch (err) {
+        console.error("failed to load module info", err);
+      }
+    }
+
+    if (moduleId) loadModule();
+  }, [moduleId]);
+
 
   useEffect(() => {
     async function loadWords() {
@@ -219,17 +245,22 @@ export default function TestPageClient() {
   }
 
   const progressPct = Math.round((index / total) * 100);
-
   return (
     <>
       <Header />
 
-      <main className="min-h-screen p-8 bg-gray-50">
+      <main className="min-h-screen overflow-x-hidden p-8 bg-gray-100">
+        {moduleInfo && (
+          <div className="text-[#4255FF] pt-10 mb-8 max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold">{moduleInfo.title}</h1>
+            <p className="text-gray-600 mt-4">{moduleInfo.description}</p>
+          </div>
+        )}
+        <div className="flex flex-col items-center">
+          <hr className=" w-full max-w-4xl mb-8 border-gray-300" />
+        </div>
         <header className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-[#4255FF] mb-2">
-            {moduleName} — Test
-          </h1>
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+          <div className="w-full bg-gray-300 rounded-full h-2 mb-4">
             <div
               className="h-2 rounded-full bg-[#4255FF] transition-all"
               style={{ width: `${progressPct}%` }}
@@ -242,7 +273,7 @@ export default function TestPageClient() {
 
         <section className="max-w-4xl mx-auto">
           {!showResult && (
-            <div className="bg-white rounded-2xl shadow p-6">
+            <div className="bg-white rounded-2xl shadow p-8">
               {current.type === "written" && (
                 <WrittenQuestion
                   key={current.id}
@@ -339,7 +370,7 @@ export default function TestPageClient() {
 
                   <div className="flex justify-end gap-2 mt-6">
                     <button
-                      className="px-4 py-2 border rounded"
+                      className="px-4 py-2 border rounded-xl"
                       onClick={() => {
                         setMatchPairsGiven({});
                         setMatchLeftSelected(null);
@@ -350,7 +381,7 @@ export default function TestPageClient() {
 
                     <button
                       onClick={submitMatching}
-                      className="px-4 py-2 bg-[#4255FF] text-white rounded"
+                      className=" px-4 py-2 bg-[#4255FF] text-white rounded-xl"
                     >
                       Submit Matching
                     </button>
