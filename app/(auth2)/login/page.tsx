@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "@/components/Header";
+import loginImage from "../../../components/images/log.jpeg";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"login" | "signup">("login"); // toggle
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +19,6 @@ export default function AuthPage() {
 
     try {
       const url = "https://imba-server.up.railway.app/auth/login";
-
       const bodyData = { email, password };
 
       const res = await fetch(url, {
@@ -42,58 +42,84 @@ export default function AuthPage() {
   };
 
   return (
-    <>
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full">
-          <h1 className="text-3xl font-bold text-[#4255FF] mb-6 text-center">
-            Login
+    <div className="flex min-h-screen">
+      <div className="hidden md:block w-1/2 relative">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${loginImage.src})` }}
+        ></div>
+
+        <div className="absolute inset-0 mt-18 items-center justify-center ">
+          <h1 className="text-black text-4xl md:text-5xl font-bold text-center px-4">
+            learn with imba,
+            <br /> be imba.
           </h1>
-
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            {/* login-only: no name input */}
-
-            <input
-              type="email"
-              placeholder="Email"
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError("");
-              }}
-              className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError("");
-              }}
-              className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
-            />
-            <button
-              type="submit"
-              className="bg-[#4255FF] text-white py-3 rounded-full font-semibold hover:scale-105 transition-transform duration-200 mt-2"
-            >
-              Login
-            </button>
-          </form>
-          {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
-
-          <p className="text-center text-gray-500 mt-4">
-            Don&apos;t have an account?
-            <a
-              href="/register"
-              className="text-[#4255FF] font-semibold hover:underline"
-            >
-              Register
-            </a>
-          </p>
-
-          <p className="text-center text-gray-400 mt-2 text-sm">
-            <Link href="/">← Back to Home</Link>
-          </p>
         </div>
       </div>
-    </>
+
+      <div className="flex flex-1 flex-col justify-between bg-white px-8 w-full">
+        <div className="flex gap-4 mb-8 items-center justify-center pt-10">
+          <span className="px-4 py-2 font-semibold text-[#4255FF] border-b-2 border-[#4255FF]">
+            Login
+          </span>
+          <Link
+            href="/register"
+            className="px-4 py-2 font-semibold text-gray-500 hover:text-[#4255FF]"
+          >
+            Sign Up
+          </Link>
+        </div>
+
+        {/* Middle: form */}
+        <div className="flex flex-1 items-center justify-center px-6">
+          <div className="w-full max-w-md">
+            <h1 className="text-4xl font-bold text-[#4255FF] mb-8 text-center">
+              {mode === "login" ? "Welcome Back" : "Create an Account"}
+            </h1>
+
+            <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+              <input
+                type="email"
+                placeholder="Email"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
+                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+              />
+              {mode === "signup" && (
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+                />
+              )}
+              <input
+                type="password"
+                placeholder="Password"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
+                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+              />
+              <button
+                type="submit"
+                className="bg-[#4255FF] text-white py-4 rounded-xl font-semibold hover:scale-105 transition-transform duration-200"
+              >
+                {mode === "login" ? "Login" : "Sign Up"}
+              </button>
+            </form>
+
+            {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
+          </div>
+        </div>
+
+        {/* Bottom links */}
+        <div className="p-6 text-center text-gray-400 text-sm">
+          <Link href="/">← Back to Home</Link>
+        </div>
+      </div>
+    </div>
   );
 }
