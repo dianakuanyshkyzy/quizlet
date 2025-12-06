@@ -59,7 +59,6 @@ export default function TestPageClient() {
     if (moduleId) loadModule();
   }, [moduleId]);
 
-
   useEffect(() => {
     async function loadWords() {
       try {
@@ -246,205 +245,199 @@ export default function TestPageClient() {
 
   const progressPct = Math.round((index / total) * 100);
   return (
-    <>
-      <Header />
+    <main className="min-h-screen overflow-x-hidden p-8 bg-gray-100">
+      {moduleInfo && (
+        <div className="text-[#4255FF] pt-10 mb-8 max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold">{moduleInfo.title}</h1>
+          <p className="text-gray-600 mt-4">{moduleInfo.description}</p>
+        </div>
+      )}
+      <div className="flex flex-col items-center">
+        <hr className=" w-full max-w-4xl mb-8 border-gray-300" />
+      </div>
+      <header className="max-w-4xl mx-auto">
+        <div className="w-full bg-gray-300 rounded-full h-2 mb-4">
+          <div
+            className="h-2 rounded-full bg-[#4255FF] transition-all"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <p className="text-sm text-gray-600 mb-6">
+          Question {index + 1} / {total}
+        </p>
+      </header>
 
-      <main className="min-h-screen overflow-x-hidden p-8 bg-gray-100">
-        {moduleInfo && (
-          <div className="text-[#4255FF] pt-10 mb-8 max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold">{moduleInfo.title}</h1>
-            <p className="text-gray-600 mt-4">{moduleInfo.description}</p>
+      <section className="max-w-4xl mx-auto">
+        {!showResult && (
+          <div className="bg-white rounded-2xl shadow p-8">
+            {current.type === "written" && (
+              <WrittenQuestion
+                key={current.id}
+                word={(current as any).word}
+                onSubmit={(val) =>
+                  handleSubmitWritten((current as any).word, val)
+                }
+              />
+            )}
+            {current.type === "written2" && (
+              <WrittenQuestion2
+                key={current.id}
+                word={(current as any).word}
+                onSubmit={(val) =>
+                  handleSubmitWritten2((current as any).word, val)
+                }
+              />
+            )}
+
+            {current.type === "mc" && (
+              <MCQuestion
+                key={current.id}
+                word={(current as any).word}
+                options={(current as any).options}
+                onChoose={handleSubmitMC}
+              />
+            )}
+
+            {current.type === "matching" && (
+              <div className="w-full max-w-2xl">
+                <h3 className="text-lg font-semibold mb-3">Matching</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Click a term on the left, then its definition below.
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    {((current as any).pairs as Word[]).map((p) => (
+                      <button
+                        key={p.term}
+                        onClick={() => handleMatchSelectLeft(p.term)}
+                        className={`w-full text-left p-3 rounded-xl mb-2 border ${
+                          matchLeftSelected === p.term
+                            ? "border-[#4255FF] bg-[#eef2ff]"
+                            : "border-gray-200 bg-white"
+                        }`}
+                      >
+                        {p.term}
+                        <div className="text-sm text-gray-400"></div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div>
+                    {((current as any).pairs as Word[]).map((p) => {
+                      const assigned = matchPairsGiven[p.term];
+                      return (
+                        <motion.div
+                          key={p.term}
+                          layout
+                          className="h-[52px] mb-2 flex items-center"
+                        >
+                          {assigned && (
+                            <motion.button
+                              layout
+                              onClick={() => handleMatchSelectRight(assigned)}
+                              className="w-full text-left p-3 rounded-xl border bg-[#eef2ff] border-[#4255FF]"
+                            >
+                              {assigned}
+                            </motion.button>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 mt-6 justify-center w-full">
+                  {matchRightOrder
+                    .filter((t) => !Object.values(matchPairsGiven).includes(t))
+                    .map((t) => (
+                      <motion.button
+                        key={t}
+                        layout
+                        onClick={() => handleMatchSelectRight(t)}
+                        className="px-4 py-3 min-w-[210px] text-center rounded-xl border border-gray-200 bg-white"
+                      >
+                        {t}
+                      </motion.button>
+                    ))}
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6">
+                  <button
+                    className="px-4 py-2 border rounded-xl"
+                    onClick={() => {
+                      setMatchPairsGiven({});
+                      setMatchLeftSelected(null);
+                    }}
+                  >
+                    Reset
+                  </button>
+
+                  <button
+                    onClick={submitMatching}
+                    className=" px-4 py-2 bg-[#4255FF] text-white rounded-xl"
+                  >
+                    Submit Matching
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
-        <div className="flex flex-col items-center">
-          <hr className=" w-full max-w-4xl mb-8 border-gray-300" />
-        </div>
-        <header className="max-w-4xl mx-auto">
-          <div className="w-full bg-gray-300 rounded-full h-2 mb-4">
-            <div
-              className="h-2 rounded-full bg-[#4255FF] transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-600 mb-6">
-            Question {index + 1} / {total}
-          </p>
-        </header>
 
-        <section className="max-w-4xl mx-auto">
-          {!showResult && (
-            <div className="bg-white rounded-2xl shadow p-8">
-              {current.type === "written" && (
-                <WrittenQuestion
-                  key={current.id}
-                  word={(current as any).word}
-                  onSubmit={(val) =>
-                    handleSubmitWritten((current as any).word, val)
-                  }
-                />
-              )}
-              {current.type === "written2" && (
-                <WrittenQuestion2
-                  key={current.id}
-                  word={(current as any).word}
-                  onSubmit={(val) =>
-                    handleSubmitWritten2((current as any).word, val)
-                  }
-                />
-              )}
+        {showResult && (
+          <div className="bg-white rounded-2xl shadow p-6 text-center">
+            <h2 className="text-3xl font-bold mb-2">Test completed 🎉</h2>
+            <p className="text-gray-600 mb-4">Score: {score}</p>
+            <p className="text-sm text-gray-500 mb-6">
+              {wrongList.length === 0
+                ? "Perfect! You got everything."
+                : `You missed ${wrongList.length} items.`}
+            </p>
 
-              {current.type === "mc" && (
-                <MCQuestion
-                  key={current.id}
-                  word={(current as any).word}
-                  options={(current as any).options}
-                  onChoose={handleSubmitMC}
-                />
-              )}
-
-              {current.type === "matching" && (
-                <div className="w-full max-w-2xl">
-                  <h3 className="text-lg font-semibold mb-3">Matching</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Click a term on the left, then its definition below.
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      {((current as any).pairs as Word[]).map((p) => (
-                        <button
-                          key={p.term}
-                          onClick={() => handleMatchSelectLeft(p.term)}
-                          className={`w-full text-left p-3 rounded-xl mb-2 border ${
-                            matchLeftSelected === p.term
-                              ? "border-[#4255FF] bg-[#eef2ff]"
-                              : "border-gray-200 bg-white"
-                          }`}
-                        >
-                          {p.term}
-                          <div className="text-sm text-gray-400"></div>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div>
-                      {((current as any).pairs as Word[]).map((p) => {
-                        const assigned = matchPairsGiven[p.term];
-                        return (
-                          <motion.div
-                            key={p.term}
-                            layout
-                            className="h-[52px] mb-2 flex items-center"
-                          >
-                            {assigned && (
-                              <motion.button
-                                layout
-                                onClick={() => handleMatchSelectRight(assigned)}
-                                className="w-full text-left p-3 rounded-xl border bg-[#eef2ff] border-[#4255FF]"
-                              >
-                                {assigned}
-                              </motion.button>
-                            )}
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3 mt-6 justify-center w-full">
-                    {matchRightOrder
-                      .filter(
-                        (t) => !Object.values(matchPairsGiven).includes(t)
-                      )
-                      .map((t) => (
-                        <motion.button
-                          key={t}
-                          layout
-                          onClick={() => handleMatchSelectRight(t)}
-                          className="px-4 py-3 min-w-[210px] text-center rounded-xl border border-gray-200 bg-white"
-                        >
-                          {t}
-                        </motion.button>
-                      ))}
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-6">
-                    <button
-                      className="px-4 py-2 border rounded-xl"
-                      onClick={() => {
-                        setMatchPairsGiven({});
-                        setMatchLeftSelected(null);
-                      }}
-                    >
-                      Reset
-                    </button>
-
-                    <button
-                      onClick={submitMatching}
-                      className=" px-4 py-2 bg-[#4255FF] text-white rounded-xl"
-                    >
-                      Submit Matching
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {showResult && (
-            <div className="bg-white rounded-2xl shadow p-6 text-center">
-              <h2 className="text-3xl font-bold mb-2">Test completed 🎉</h2>
-              <p className="text-gray-600 mb-4">Score: {score}</p>
-              <p className="text-sm text-gray-500 mb-6">
-                {wrongList.length === 0
-                  ? "Perfect! You got everything."
-                  : `You missed ${wrongList.length} items.`}
-              </p>
-
-              {wrongList.length > 0 && (
-                <div className="text-left max-w-2xl mx-auto">
-                  <h3 className="font-semibold mb-2">Review</h3>
-                  <ul className="space-y-2">
-                    {wrongList.map((w, i) => (
-                      <li key={i} className="p-3 rounded-lg border">
-                        <div className="font-semibold">{w.word.term}</div>
-                        <div className="text-sm text-green-700">
-                          Correct: {w.correct}
+            {wrongList.length > 0 && (
+              <div className="text-left max-w-2xl mx-auto">
+                <h3 className="font-semibold mb-2">Review</h3>
+                <ul className="space-y-2">
+                  {wrongList.map((w, i) => (
+                    <li key={i} className="p-3 rounded-lg border">
+                      <div className="font-semibold">{w.word.term}</div>
+                      <div className="text-sm text-green-700">
+                        Correct: {w.correct}
+                      </div>
+                      {w.given && (
+                        <div className="text-sm text-red-600">
+                          Your answer: {String(w.given)}
                         </div>
-                        {w.given && (
-                          <div className="text-sm text-red-600">
-                            Your answer: {String(w.given)}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div className="mt-6 flex justify-center gap-3">
-                <button
-                  onClick={() => {
-                    window.location.reload();
-                  }}
-                  className="px-4 py-2 bg-[#4255FF] text-white rounded"
-                >
-                  Retry
-                </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </div>
+            )}
+
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="px-4 py-2 bg-[#4255FF] text-white rounded"
+              >
+                Retry
+              </button>
             </div>
-          )}
-        </section>
-        <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
-          <button
-            onClick={() => (window.location.href = `/modules/${moduleId}`)}
-            className="ml-8 text-black flex items-center gap-2 text-lg"
-          >
-            <ArrowLeft size={20} /> Back to terms
-          </button>
-        </div>
-      </main>
-    </>
+          </div>
+        )}
+      </section>
+      <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
+        <button
+          onClick={() => (window.location.href = `/modules/${moduleId}`)}
+          className="ml-8 text-black flex items-center gap-2 text-lg"
+        >
+          <ArrowLeft size={20} /> Back to terms
+        </button>
+      </div>
+    </main>
   );
 }
 function WrittenQuestion({

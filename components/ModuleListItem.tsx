@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Trash2, Edit2 } from "lucide-react";
+import { Card } from "./ui/card";
 
 type Module = {
   id: string;
@@ -16,10 +17,18 @@ type ModuleListItemProps = {
   module: Module;
   onClick: (module: Module) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, data: { title: string; description: string; isPrivate: boolean }) => void;
+  onUpdate: (
+    id: string,
+    data: { title: string; description: string; isPrivate: boolean }
+  ) => void;
 };
 
-export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: ModuleListItemProps) {
+export default function ModuleListItem({
+  module,
+  onClick,
+  onDelete,
+  onUpdate,
+}: ModuleListItemProps) {
   const [confirming, setConfirming] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -29,7 +38,7 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
   });
 
   return (
-    <div className="w-full  rounded-2xl h-16 bg-white rounded-xl shadow-md p-4 transition mb-4 hover:shadow-xl cursor-pointer transition w-full"> 
+    <Card className="h-16 bg-white p-4 mb-4 hover:shadow-md cursor-pointer transition w-full">
       <div className="flex items-center justify-between">
         <div
           className="cursor-pointer hover:underline"
@@ -37,7 +46,6 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
         >
           {module.title}
         </div>
-
 
         <div className="flex gap-4">
           <Edit2
@@ -48,17 +56,16 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
               setEditing(true);
             }}
           />
-          
-        <Trash2
-          className="text-gray-500 cursor-pointer hover:scale-110 transition"
-          size={20}
-          onClick={(e) => {
-            e.stopPropagation(); 
-            setConfirming(true);
-          }}
-        />
-      </div>
-      
+
+          <Trash2
+            className="text-gray-500 cursor-pointer hover:scale-110 transition"
+            size={20}
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirming(true);
+            }}
+          />
+        </div>
       </div>
 
       {confirming && (
@@ -89,7 +96,7 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
           </div>
         </div>
       )}
-            {editing && (
+      {editing && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-[360px] shadow-lg">
             <h2 className="text-lg font-semibold mb-3">Edit Module</h2>
@@ -104,13 +111,17 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
               className="w-full mb-2 p-2 border rounded"
               placeholder="Description"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
             />
             <label className="flex items-center gap-2 mb-2">
               <input
                 type="checkbox"
                 checked={form.isPrivate}
-                onChange={(e) => setForm({ ...form, isPrivate: e.target.checked })}
+                onChange={(e) =>
+                  setForm({ ...form, isPrivate: e.target.checked })
+                }
               />
               Private
             </label>
@@ -134,7 +145,7 @@ export default function ModuleListItem({ module, onClick, onDelete, onUpdate }: 
             </div>
           </div>
         </div>
-  )}
-    </div>
+      )}
+    </Card>
   );
 }

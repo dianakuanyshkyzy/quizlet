@@ -1,10 +1,11 @@
 "use client";
-
-import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Star, ArrowLeft } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function LearnPageClient({ id }: { id: string }) {
   const [moduleData, setModuleData] = useState<any | null>(null);
@@ -36,8 +37,9 @@ export default function LearnPageClient({ id }: { id: string }) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (mounted) setModuleData(data);
-      } catch (err: any) {
-        if (mounted) setError(err.message);
+      } catch (err) {
+        if (err instanceof Error && mounted)
+          console.error("module fetch error", err);
       }
 
       const terms = await fetch(
@@ -61,28 +63,27 @@ export default function LearnPageClient({ id }: { id: string }) {
   }, [id]);
 
   async function toggleStar(term: any) {
-  try {
-    // send request to backend
-    await fetch(`https://imba-server.up.railway.app/terms/${term.id}`, {
-      method: "PATCH",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        isStarred: !term.isStarred,
-      }),
-    });
+    try {
+      // send request to backend
+      await fetch(`https://imba-server.up.railway.app/terms/${term.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isStarred: !term.isStarred,
+        }),
+      });
 
-    // update UI
-    setTermsList(prev =>
-      prev.map(t =>
-        t.id === term.id ? { ...t, isStarred: !t.isStarred } : t
-      )
-    );
-  } catch (err) {
-    console.error("star error", err);
+      // update UI
+      setTermsList((prev) =>
+        prev.map((t) =>
+          t.id === term.id ? { ...t, isStarred: !t.isStarred } : t
+        )
+      );
+    } catch (err) {
+      console.error("star error", err);
+    }
   }
-}
-
 
   async function submitNewTerm() {
     if (!newTerm.trim() || !newDef.trim()) return;
@@ -150,42 +151,33 @@ export default function LearnPageClient({ id }: { id: string }) {
   }
 
   return (
-    <>
-      <Header />
+    <main className="flex flex-col items-center min-h-screen bg-gray-50 relative p-8 pb-20">
+      <div className="w-full max-w-4xl mb-8">
+        {loading ? (
+          <div className="rounded-2xl">Loading module…</div>
+        ) : error ? (
+          <div className="p-6 bg-red-50 text-red-700 rounded-2xl">{error}</div>
+        ) : moduleData?.data ? (
+          <div className="rounded-2xl">
+            <h1 className="text-4xl font-bold text-[#4255FF]">
+              {moduleData.data.title}
+            </h1>
+            <p className="mt-2 text-gray-600">{moduleData.data.description}</p>
+          </div>
+        ) : (
+          <div className="p-6 bg-yellow-50 text-yellow-800 rounded-2xl">
+            Module not found
+          </div>
+        )}
+      </div>
 
-      <main className="flex flex-col items-center min-h-screen bg-gray-50 relative p-8 pb-20">
-        <div className="w-full max-w-4xl mb-8">
-          {loading ? (
-            <div className="rounded-2xl">Loading module…</div>
-          ) : error ? (
-            <div className="p-6 bg-red-50 text-red-700 rounded-2xl">
-              {error}
-            </div>
-          ) : moduleData?.data ? (
-            <div className="rounded-2xl">
-              <h1 className="text-4xl font-bold text-[#4255FF]">
-                {moduleData.data.title}
-              </h1>
-              <p className="mt-2 text-gray-600">
-                {moduleData.data.description}
-              </p>
-            </div>
-          ) : (
-            <div className="p-6 bg-yellow-50 text-yellow-800 rounded-2xl">
-              Module not found
-            </div>
-          )}
-        </div>
+      <hr className="w-full max-w-4xl mb-8 border-gray-300" />
 
-        <hr className="w-full max-w-4xl mb-8 border-gray-300" />
+      <h2 className="text-2xl font-semibold mb-6">Choose your mode</h2>
 
-        <h2 className="text-2xl font-semibold mb-6">Choose your mode</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-          <button
-            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl flex flex-col items-center"
-            onClick={() => router.push(`/modules/${id}/flashcards`)}
-          >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+        <Link href={`/modules/${id}/flashcards`}>
+          <Card className="bg-white rounded-2xl p-5 text-xl font-semibold hover:shadow-md flex flex-col items-center cursor-pointer">
             <Image
               src="/images/img3.png"
               width={150}
@@ -193,32 +185,32 @@ export default function LearnPageClient({ id }: { id: string }) {
               alt="Flashcards"
             />
             Flashcards
-          </button>
+          </Card>
+        </Link>
 
-          <button
-            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl flex flex-col items-center"
-            onClick={() => router.push(`/modules/${id}/quiz`)}
-          >
+        <Link href={`/modules/${id}/quiz`}>
+          <Card className="bg-white rounded-2xl p-5 text-xl font-semibold hover:shadow-md flex flex-col items-center cursor-pointer">
             <Image src="/images/img1.png" width={150} height={150} alt="Quiz" />
             Quiz
-          </button>
+          </Card>
+        </Link>
 
-          <button
-            className="bg-white shadow-md rounded-2xl p-5 text-xl font-semibold hover:shadow-xl flex flex-col items-center"
-            onClick={() => router.push(`/modules/${id}/test`)}
-          >
+        <Link href={`/modules/${id}/test`}>
+          <Card className="bg-white rounded-2xl p-5 text-xl font-semibold hover:shadow-md flex flex-col items-center cursor-pointer">
             <Image src="/images/img4.png" width={150} height={150} alt="Test" />
             Test
-          </button>
-        </div>
+          </Card>
+        </Link>
+      </div>
 
-        <div className="w-full max-w-4xl mt-10">
-          <h3 className="text-2xl font-semibold mb-4">Terms</h3>
+      <div className="w-full max-w-4xl mt-10">
+        <h3 className="text-2xl font-semibold mb-4">Terms</h3>
 
+        <div className="space-y-3">
           {termsList.map((t) => (
-            <div
+            <Card
               key={t.id}
-              className="bg-white rounded-2xl shadow-md h-16 w-full flex p-4 mb-2 items-center"
+              className="bg-white rounded-2xl h-16 w-full flex p-4 items-center flex-row"
             >
               <div
                 className={`size-4 rounded-full ${
@@ -264,16 +256,17 @@ export default function LearnPageClient({ id }: { id: string }) {
 
                     <div className="flex items-center gap-4">
                       <div className="relative">
-                        <button
+                        <Button
                           onClick={() =>
                             setOpenDropdownId(
                               openDropdownId === t.id ? null : t.id
                             )
                           }
-                          className="px-5 py-2 bg-blue-500 text-white rounded-xl text-sm"
+                          className="px-5 py-2 bg-[#4255FF] hover:bg-[#3241c2] cursor-pointer rounded-xl text-sm"
+                          size={"sm"}
                         >
-                           Options
-                        </button>
+                          Options
+                        </Button>
 
                         {openDropdownId === t.id && (
                           <div className="p-2 absolute right-0 top-full mt-2 bg-white border rounded shadow-md flex flex-col w-28 z-10">
@@ -307,50 +300,50 @@ export default function LearnPageClient({ id }: { id: string }) {
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
+        </div>
 
-          {addingNew ? (
-            <div className="bg-white rounded-2xl shadow-md w-full p-4 mt-4 flex gap-4 items-center">
-              <input
-                placeholder="Term"
-                className="p-2  rounded-lg flex-1"
-                value={newTerm}
-                onChange={(e) => setNewTerm(e.target.value)}
-              />
-              <input
-                placeholder="Definition"
-                className="p-2  rounded-lg flex-1"
-                value={newDef}
-                onChange={(e) => setNewDef(e.target.value)}
-              />
+        {addingNew ? (
+          <div className="bg-white rounded-2xl shadow-md w-full p-4 mt-4 flex gap-4 items-center">
+            <input
+              placeholder="Term"
+              className="p-2  rounded-lg flex-1"
+              value={newTerm}
+              onChange={(e) => setNewTerm(e.target.value)}
+            />
+            <input
+              placeholder="Definition"
+              className="p-2  rounded-lg flex-1"
+              value={newDef}
+              onChange={(e) => setNewDef(e.target.value)}
+            />
 
-              <button
-                onClick={submitNewTerm}
-                className="px-6 py-2 bg-green-500 text-white rounded-xl text-sm"
-              >
-                Submit
-              </button>
-            </div>
-          ) : (
-            <div
-              className="bg-white rounded-2xl shadow-md h-16 w-full mt-4 flex justify-center items-center font-semibold cursor-pointer"
-              onClick={() => setAddingNew(true)}
+            <button
+              onClick={submitNewTerm}
+              className="px-6 py-2 bg-green-500 text-white rounded-xl text-sm"
             >
-              Add New Term
-            </div>
-          )}
-        </div>
-
-        <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
-          <button
-            onClick={() => router.push("/main")}
-            className="ml-8 text-black flex items-center gap-2 text-lg"
+              Submit
+            </button>
+          </div>
+        ) : (
+          <Card
+            className="rounded-2xl h-16 w-full mt-4 flex justify-center items-center font-semibold cursor-pointer"
+            onClick={() => setAddingNew(true)}
           >
-            <ArrowLeft size={20} /> Back to modules
-          </button>
-        </div>
-      </main>
-    </>
+            Add New Term
+          </Card>
+        )}
+      </div>
+
+      <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
+        <button
+          onClick={() => router.push("/main")}
+          className="ml-8 text-black flex items-center gap-2 text-lg"
+        >
+          <ArrowLeft size={20} /> Back to modules
+        </button>
+      </div>
+    </main>
   );
 }

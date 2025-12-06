@@ -148,7 +148,6 @@ export default function FlashcardsClient() {
 
   return (
     <>
-      <Header />
       <main className="overflow-x-hidden bg-gray-100 min-h-screen">
         {moduleInfo && (
           <div className="text-[#4255FF] pt-10 mb-8 max-w-4xl mx-auto">
