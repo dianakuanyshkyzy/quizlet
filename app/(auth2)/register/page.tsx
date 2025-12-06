@@ -118,7 +118,7 @@ export default function AuthPage() {
         </div>
 
         <div className="p-6 text-center text-gray-400 text-sm">
-          <Link href="/">← Back to Home</Link>
+          <Link href="/">← Back to Main page</Link>
         </div>
       </div>
     </div>
