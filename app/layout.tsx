@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,29 +15,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Imba Learn",
-  description: "Test your skills",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isAuthPage =
+    pathname.includes("/login") || pathname.includes("/register");
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
+        {!isAuthPage && <Header />}
         {children}
 
-        <footer className="fixed w-full py-4 bottom-0 text-center text-sm text-gray-600 border-t">
-          <p>
-            &copy; {new Date().getFullYear()} Imba Learn. All rights reserved.
-          </p>
-        </footer>
+        {!isAuthPage && (
+          <footer className="fixed w-full py-4 bottom-0 text-center text-sm text-gray-600 border-t">
+            <p>
+              &copy; {new Date().getFullYear()} Imba Learn. All rights reserved.
+            </p>
+          </footer>
+        )}
       </body>
     </html>
   );
