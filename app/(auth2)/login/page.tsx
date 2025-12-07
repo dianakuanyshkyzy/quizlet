@@ -34,7 +34,7 @@ export default function AuthPage() {
       if (!data.ok) {
         throw new Error(data.message || "Authentication failed");
       }
-      router.push("/main");
+      router.push("/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError(String(err));
