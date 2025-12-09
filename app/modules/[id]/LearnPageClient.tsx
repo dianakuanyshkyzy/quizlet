@@ -6,6 +6,7 @@ import { Star, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LearnPageClient({ id }: { id: string }) {
   const [moduleData, setModuleData] = useState<any | null>(null);
@@ -154,7 +155,10 @@ export default function LearnPageClient({ id }: { id: string }) {
     <main className="flex flex-col items-center min-h-screen bg-gray-50 relative p-8 pb-20">
       <div className="w-full max-w-4xl mb-8">
         {loading ? (
-          <div className="rounded-2xl">Loading module…</div>
+          <div className="space-y-1">
+            <Skeleton className="h-10 w-1/3 bg-gray-200 mb-3" />
+            <Skeleton className="h-5 w-1/4 bg-gray-200" />
+          </div>
         ) : error ? (
           <div className="p-6 bg-red-50 text-red-700 rounded-2xl">{error}</div>
         ) : moduleData?.data ? (
