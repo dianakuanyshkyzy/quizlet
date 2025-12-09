@@ -21,7 +21,7 @@ export default function AccountPage() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const router = useRouter(); 
+  const router = useRouter();
 
   const loadUser = async () => {
     setLoading(true);
@@ -77,30 +77,12 @@ export default function AccountPage() {
       router.push("/login");
     }
   }, [loading, userData]);
-  
+
   if (loading) return <p className="p-8">loading…</p>;
-  if (!userData) return null; 
+  if (!userData) return null;
 
   return (
-    // <main className="p-8 max-w-[800px] mx-auto space-y-8">
-    //   {!isEditing ? (
-    //     <ProfileSection
-    //       userData={userData}
-    //       isEditing={isEditing}
-    //       setIsEditing={setIsEditing}
-    //     />
-    //   ) : (
-    //     <EditProfileForm
-    //       userData={userData}
-    //       onSubmit={handleUpdate}
-    //       onCancel={() => setIsEditing(false)}
-    //     />
-    //   )}
-    //   <PasswordChangeForm />
-    //   <DeleteAccountSection />
-    // </main>
     <>
-      <Header />
       <main className="min-h-screen bg-gradient-to-br from-background to-secondary/20 py-8 px-4">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8">
@@ -112,24 +94,22 @@ export default function AccountPage() {
             </p>
           </div>
           <div className="space-y-6">
-           {!isEditing ? (
-        userData && (
-          <ProfileSection
-            userData={userData}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-          />
-        )
-      ) : (
-        userData && (
-          <EditProfileForm
-            userData={userData}
-            onSubmit={handleUpdate}
-            onCancel={() => setIsEditing(false)}
-          />
-        )
-      )}
-            <PasswordChangeForm /> 
+            {!isEditing
+              ? userData && (
+                  <ProfileSection
+                    userData={userData}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                  />
+                )
+              : userData && (
+                  <EditProfileForm
+                    userData={userData}
+                    onSubmit={handleUpdate}
+                    onCancel={() => setIsEditing(false)}
+                  />
+                )}
+            <PasswordChangeForm />
             <DeleteAccountSection />
           </div>
         </div>
