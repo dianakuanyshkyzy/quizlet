@@ -1,17 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import loginImage from "../../../components/images/log.jpeg";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthPage() {
   const router = useRouter();
+  const { isAuthenticated, isLoading, checkAuthentication } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login"); // toggle
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +43,9 @@ export default function AuthPage() {
       if (!data.ok) {
         throw new Error(data.message || "Authentication failed");
       }
+
+      // Re-check authentication after successful login
+      await checkAuthentication();
       router.push("/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
