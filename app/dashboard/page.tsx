@@ -150,14 +150,17 @@ export default function MainPage() {
     }
 
     try {
-      const res = await fetch("https://imba-server.up.railway.app/modules", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(moduleData),
-      });
+      const res = await fetch(
+        "https://imba-server.up.railway.app/v2/modules/collection",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(moduleData),
+        }
+      );
 
       const result = await res.json();
       if (!res.ok || !result.ok) {
@@ -298,7 +301,6 @@ export default function MainPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-7">
-                      {JSON.stringify(m)}
                       <div className="flex flex-row items-center justify-between">
                         <div>
                           <p className="pb-2 text-sm text-gray-500">

@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { Trash2, Edit2 } from "lucide-react";
 import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 
 type Module = {
   id: string;
@@ -11,6 +20,7 @@ type Module = {
   description: string;
   isPrivate: boolean;
   userId: string;
+  isOwner: boolean;
 };
 
 type ModuleListItemProps = {
@@ -38,7 +48,7 @@ export default function ModuleListItem({
   });
 
   return (
-    <Card className="h-16 bg-white p-4 mb-4 hover:shadow-md cursor-pointer transition w-full">
+    <Card className=" bg-white p-4 mb-4 hover:shadow-md cursor-pointer transition w-full">
       <div className="flex items-center justify-between">
         <div
           className="cursor-pointer hover:underline"
@@ -46,78 +56,77 @@ export default function ModuleListItem({
         >
           {module.title}
         </div>
+        {module.isOwner && (
+          <div className="flex gap-4">
+            <Edit2
+              className="text-gray-500 cursor-pointer hover:scale-110 transition"
+              size={20}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditing(true);
+              }}
+            />
 
-        <div className="flex gap-4">
-          <Edit2
-            className="text-gray-500 cursor-pointer hover:scale-110 transition"
-            size={20}
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditing(true);
-            }}
-          />
-
-          <Trash2
-            className="text-gray-500 cursor-pointer hover:scale-110 transition"
-            size={20}
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirming(true);
-            }}
-          />
-        </div>
+            <Trash2
+              className="text-gray-500 cursor-pointer hover:scale-110 transition"
+              size={20}
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirming(true);
+              }}
+            />
+          </div>
+        )}
       </div>
 
-      {confirming && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-[320px] shadow-lg">
-            <h2 className="text-lg font-semibold mb-3">
+      <Dialog open={confirming} onOpenChange={setConfirming}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
               Are you sure you want to delete this module?
-            </h2>
+            </DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="justify-end gap-3">
+            <Button variant="outline" onClick={() => setConfirming(false)}>
+              No
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onDelete(module.id);
+                setConfirming(false);
+              }}
+            >
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 rounded-lg border"
-                onClick={() => setConfirming(false)}
-              >
-                No
-              </button>
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Module</DialogTitle>
+          </DialogHeader>
 
-              <button
-                className="px-4 py-2 rounded-lg bg-red-500 text-white"
-                onClick={() => {
-                  onDelete(module.id);
-                  setConfirming(false);
-                }}
-              >
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {editing && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-[360px] shadow-lg">
-            <h2 className="text-lg font-semibold mb-3">Edit Module</h2>
-
-            <input
-              className="w-full mb-2 p-2 border rounded"
+          <div className="space-y-3">
+            <Input
               placeholder="Title"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
             <textarea
-              className="w-full mb-2 p-2 border rounded"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring"
               placeholder="Description"
               value={form.description}
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
               }
             />
-            <label className="flex items-center gap-2 mb-2">
-              <input
+            <label className="flex items-center gap-2 text-sm">
+              <Input
                 type="checkbox"
+                className="h-4 w-4"
                 checked={form.isPrivate}
                 onChange={(e) =>
                   setForm({ ...form, isPrivate: e.target.checked })
@@ -125,27 +134,23 @@ export default function ModuleListItem({
               />
               Private
             </label>
-
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 rounded-lg border"
-                onClick={() => setEditing(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg bg-blue-500 text-white"
-                onClick={() => {
-                  onUpdate(module.id, form);
-                  setEditing(false);
-                }}
-              >
-                Save
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="justify-end gap-3">
+            <Button variant="outline" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                onUpdate(module.id, form);
+                setEditing(false);
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -25,6 +25,8 @@ interface TermItemProps {
   onDelete: () => void;
   onToggleStar: () => void;
   onSaveEdit: (termId: string, term: string, definition: string) => void;
+  isOwned: boolean;
+  isCollected: boolean;
 }
 
 export default function TermItem({
@@ -32,6 +34,8 @@ export default function TermItem({
   onDelete,
   onToggleStar,
   onSaveEdit,
+  isOwned,
+  isCollected,
 }: TermItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTermValue, setEditTermValue] = useState(term.term);
@@ -90,33 +94,40 @@ export default function TermItem({
             </div>
 
             <div className="flex items-center gap-x-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size={"icon"}>
-                    <Edit2 className="text-gray-500 cursor-pointer hover:scale-110 transition size-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Edit Term</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleStartEditing}>
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600" onClick={onDelete}>
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {isOwned && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size={"icon"}>
+                      <Edit2 className="text-gray-500 cursor-pointer hover:scale-110 transition size-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Edit Term</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleStartEditing}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={onDelete}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
-              <Button onClick={onToggleStar} variant="ghost" size={"icon"}>
-                <Star
-                  className={cn(
-                    "text-gray-300 size-5 cursor-pointer hover:scale-110 transition",
-                    term.isStarred && "text-yellow-400"
-                  )}
-                  fill="currentColor"
-                />
-              </Button>
+              {isCollected && (
+                <Button onClick={onToggleStar} variant="ghost" size={"icon"}>
+                  <Star
+                    className={cn(
+                      "text-gray-300 size-5 cursor-pointer hover:scale-110 transition",
+                      term.isStarred && "text-yellow-400"
+                    )}
+                    fill="currentColor"
+                  />
+                </Button>
+              )}
             </div>
           </div>
         )}
