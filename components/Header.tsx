@@ -50,7 +50,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 text-[#4255FF] shadow-lg p-4 flex items-center justify-between">
+    <header className="bg-white border-b border-gray-200 text-[#4255FF] shadow-sm p-4 flex items-center justify-between">
       <Link href="/">
         <h1 className="text-2xl font-bold ml-4">Imba Learn</h1>
       </Link>

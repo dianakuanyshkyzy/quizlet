@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import loginImage from "../../../components/images/log.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -13,7 +16,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [mode, setMode] = useState<"login" | "signup">("login"); // toggle
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -86,41 +89,50 @@ export default function AuthPage() {
         <div className="flex flex-1 items-center justify-center px-6">
           <div className="w-full max-w-md">
             <h1 className="text-4xl font-bold text-[#4255FF] mb-8 text-center">
-              {mode === "login" ? "Welcome Back" : "Create an Account"}
+              Welcome back!
             </h1>
 
             <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-              <input
+              <Input
                 type="email"
                 placeholder="Email"
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setError("");
                 }}
-                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+                className="pl-4 py-7 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
               />
-              {mode === "signup" && (
-                <input
-                  type="text"
-                  placeholder="Name"
-                  className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                  className="pl-4 py-7 pr-12 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50] w-full"
                 />
-              )}
-              <input
-                type="password"
-                placeholder="Password"
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError("");
-                }}
-                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
-              />
-              <button
+                <Button
+                  variant={"ghost"}
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
+              <Button
+                variant={"default"}
                 type="submit"
-                className="bg-[#4255FF] text-white py-4 rounded-xl font-semibold hover:scale-105 transition-transform duration-200"
+                className="bg-[#4255FF] h-12 text-white py-4 rounded-xl font-semibold hover:scale-105 transition-transform duration-200 cl"
               >
-                {mode === "login" ? "Login" : "Sign Up"}
-              </button>
+                Login
+              </Button>
             </form>
 
             {error && <p className="text-red-500 mt-4 text-center">{error}</p>}

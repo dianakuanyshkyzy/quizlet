@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import loginImage from "../../../components/images/log.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -14,6 +17,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -89,40 +93,56 @@ export default function AuthPage() {
             </h1>
 
             <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-              <input
+              <Input
                 type="text"
                 placeholder="Name"
                 onChange={(e) => {
                   setName(e.target.value);
                   setError("");
                 }}
-                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+                className="pl-4 py-7 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
               />
-              <input
+              <Input
                 type="email"
                 placeholder="Email"
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setError("");
                 }}
-                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
+                className="pl-4 py-7 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
               />
 
-              <input
-                type="password"
-                placeholder="Password"
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError("");
-                }}
-                className="p-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50]"
-              />
-              <button
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                  className="pl-4 py-7 pr-12 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D5A50] w-full"
+                />
+                <Button
+                  variant={"ghost"}
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
+
+              <Button
+                variant={"default"}
                 type="submit"
-                className="bg-[#4255FF] text-white py-4 rounded-xl font-semibold hover:scale-105 transition-transform duration-200"
+                className="bg-[#4255FF] h-12 text-white py-4 rounded-xl font-semibold hover:scale-105 transition-transform duration-200 cl"
               >
                 Sign Up
-              </button>
+              </Button>
             </form>
 
             {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
