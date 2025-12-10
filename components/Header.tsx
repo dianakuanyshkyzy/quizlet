@@ -13,7 +13,7 @@ interface UserData {
     id: string;
     name: string;
     email: string;
-    avatar?: string;
+    profilePicture?: string;
   };
 }
 
@@ -65,7 +65,14 @@ export default function Header() {
               <Skeleton className="size-12 rounded-full bg-gray-200" />
             ) : (
               <Avatar className="size-12 border border-gray-100">
-                <AvatarImage src={user?.data.avatar} alt={user?.data.name} />
+                <AvatarImage
+                  src={
+                    "https://imba-server.up.railway.app" +
+                    user?.data.profilePicture
+                  }
+                  alt={user?.data.name}
+                  crossOrigin="anonymous"
+                />
                 <AvatarFallback>
                   {user ? getInitials(user.data.name) : "U"}
                 </AvatarFallback>

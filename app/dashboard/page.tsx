@@ -23,6 +23,8 @@ interface Module {
 
 interface CommunityModule extends Module {
   ownerName: string;
+  ownerImg?: string;
+  termsCount: number;
 }
 
 type CreateModule = {
@@ -290,7 +292,7 @@ export default function MainPage() {
 
                         <div>
                           <span className="bg-muted text-muted-foreground rounded-2xl px-3 py-1 text-sm">
-                            22 terms
+                            {m.termsCount} terms
                           </span>
                         </div>
                       </div>
@@ -306,9 +308,11 @@ export default function MainPage() {
                             <Avatar className="size-10 border border-gray-100">
                               <AvatarImage
                                 src={
-                                  "https://imba-learn.railway.app" + m.ownerImg
+                                  "https://imba-server.up.railway.app" +
+                                  m.ownerImg
                                 }
                                 alt={m.ownerName}
+                                crossOrigin="anonymous"
                               />
                               <AvatarFallback>
                                 {m.ownerName.charAt(0) + m.ownerName.charAt(1)}

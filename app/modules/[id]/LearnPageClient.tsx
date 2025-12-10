@@ -180,9 +180,10 @@ export default function LearnPageClient({ id }: { id: string }) {
                     <AvatarImage
                       src={
                         "https://imba-server.up.railway.app" +
-                        moduleData.data.ownerAvatarUrl
+                        moduleData.data.ownerImg
                       }
                       alt={moduleData.data.ownerName}
+                      crossOrigin="anonymous"
                     />
                     <AvatarFallback>
                       {moduleData.data.ownerName[0] +
