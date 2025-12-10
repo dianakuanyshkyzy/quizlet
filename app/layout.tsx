@@ -35,7 +35,7 @@ export default function RootLayout({
           {children}
 
           {!isAuthPage && (
-            <footer className="fixed w-full py-4 bottom-0 text-center text-sm text-gray-600 border-t">
+            <footer className="fixed w-full py-4 bottom-0 text-center text-sm text-gray-600 bg-white border-t">
               <p>
                 &copy; {new Date().getFullYear()} Imba Learn. All rights
                 reserved.
