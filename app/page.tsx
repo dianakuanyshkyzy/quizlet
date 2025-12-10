@@ -1,7 +1,11 @@
+"use client";
+import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Dashboard() {
+  const auth = useAuth();
+
   return (
     <main className="flex flex-col items-center justify-start pt-24 min-h-screen bg-white text-black px-4">
       <h1 className="text-5xl md:text-5xl font-bold text-center mb-4">
@@ -14,10 +18,16 @@ export default function Dashboard() {
       </p>
 
       <Link
-        href="/login"
+        href={
+          auth.isLoading ? "#" : auth.isAuthenticated ? "/dashboard" : "/login"
+        }
         className="bg-[#4255FF] text-white px-8 py-3 rounded-full text-lg font-semibold hover:scale-105 transition-transform duration-200"
       >
-        Login to Get Started
+        {auth.isLoading
+          ? "Loading..."
+          : auth.isAuthenticated
+          ? "Go to your dashboard"
+          : "Login to get started"}
       </Link>
 
       <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-16 w-full px-8">

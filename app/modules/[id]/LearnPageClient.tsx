@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Star, ArrowLeft } from "lucide-react";
+import { Star, ArrowLeft, Edit2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -260,7 +260,7 @@ export default function LearnPageClient({ id }: { id: string }) {
 
                     <div className="flex items-center gap-4">
                       <div className="relative">
-                        <Button
+                        {/* <Button
                           onClick={() =>
                             setOpenDropdownId(
                               openDropdownId === t.id ? null : t.id
@@ -268,9 +268,16 @@ export default function LearnPageClient({ id }: { id: string }) {
                           }
                           className="px-5 py-2 bg-[#4255FF] hover:bg-[#3241c2] cursor-pointer rounded-xl text-sm"
                           size={"sm"}
-                        >
-                          Options
-                        </Button>
+                        > */}
+                        <Edit2
+                          className="text-gray-500 cursor-pointer hover:scale-110 transition size-5"
+                          onClick={() =>
+                            setOpenDropdownId(
+                              openDropdownId === t.id ? null : t.id
+                            )
+                          }
+                        />
+                        {/* </Button> */}
 
                         {openDropdownId === t.id && (
                           <div className="p-2 absolute right-0 top-full mt-2 bg-white border rounded shadow-md flex flex-col w-28 z-10">
@@ -293,11 +300,11 @@ export default function LearnPageClient({ id }: { id: string }) {
                       <button onClick={() => toggleStar(t)}>
                         {t.isStarred ? (
                           <Star
-                            className="text-yellow-500"
+                            className="text-yellow-500 size-5 cursor-pointer hover:scale-110 transition"
                             fill="currentColor"
                           />
                         ) : (
-                          <Star className="text-gray-400" />
+                          <Star className="text-gray-400 size-5 cursor-pointer hover:scale-110 transition" />
                         )}
                       </button>
                     </div>

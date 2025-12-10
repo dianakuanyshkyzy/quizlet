@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "./ui/skeleton";
 
 interface UserData {
   data: {
@@ -18,7 +19,7 @@ interface UserData {
 
 export default function Header() {
   const [user, setUser] = useState<UserData | null>(null);
-  const { logout } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuth();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,23 +60,31 @@ export default function Header() {
           href="/account"
           className="flex items-center gap-3 hover:opacity-80 transition"
         >
-          <Avatar className="size-12 border border-gray-300">
-            <AvatarImage src={user?.data.avatar} alt={user?.data.name} />
-            <AvatarFallback>
-              {user ? getInitials(user.data.name) : "U"}
-            </AvatarFallback>
-          </Avatar>
+          {isLoading ? (
+            <Skeleton className="size-12 rounded-full bg-gray-200" />
+          ) : (
+            <Avatar className="size-12 border border-gray-300">
+              <AvatarImage src={user?.data.avatar} alt={user?.data.name} />
+              <AvatarFallback>
+                {user ? getInitials(user.data.name) : "U"}
+              </AvatarFallback>
+            </Avatar>
+          )}
         </Link>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={logout}
-          className="hover:bg-red-50 hover:text-red-600"
-          title="Logout"
-        >
-          <LogOut className="h-5 w-5" />
-        </Button>
+        {isLoading ? (
+          <Skeleton className="size-8 rounded-md bg-gray-200" />
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={logout}
+            className="hover:bg-red-50 hover:text-red-600"
+            title="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        )}
       </div>
     </header>
   );
