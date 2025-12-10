@@ -44,7 +44,7 @@ export default function MainPage() {
   const handleDeleteModule = async (id: string) => {
     try {
       const res = await fetch(
-        `https://imba-server.up.railway.app/modules/${id}`,
+        `https://imba-server.up.railway.app/v2/modules/${id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -67,9 +67,12 @@ export default function MainPage() {
   const loadModules = async () => {
     setLoading(true);
     try {
-      const res = await fetch("https://imba-server.up.railway.app/modules", {
-        credentials: "include",
-      });
+      const res = await fetch(
+        "https://imba-server.up.railway.app/v2/modules/collection",
+        {
+          credentials: "include",
+        }
+      );
       const data = await res.json();
       if (data.ok && Array.isArray(data.data)) {
         setModules(data.data);
@@ -187,7 +190,7 @@ export default function MainPage() {
   const recentModules = modules.slice(0, 4);
 
   return (
-    <div className="p-8 min-h-screen max-w-[860px] mx-auto">
+    <div className="p-8 min-h-screen">
       <Tabs defaultValue="dashboard">
         <div className="flex justify-center mb-2">
           <TabsList>
@@ -195,7 +198,7 @@ export default function MainPage() {
             <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="dashboard">
+        <TabsContent value="dashboard" className="max-w-[860px] mx-auto">
           <main>
             <h2 className="text-2xl text-[#4255FF] font-bold mb-4">
               Recent Modules
@@ -251,7 +254,7 @@ export default function MainPage() {
             )}
           </main>
         </TabsContent>
-        <TabsContent value="community">
+        <TabsContent value="community" className="min-w-[1260px] mx-auto">
           <main>
             <div>
               <h2 className="text-2xl text-[#4255FF] font-bold mb-4 text-center">
@@ -270,34 +273,46 @@ export default function MainPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {communityModules.map((m) => (
                   <Card key={m.id}>
                     <CardHeader>
-                      <span className="text-lg font-semibold">{m.title}</span>
+                      <div className="flex justify-between">
+                        <div>
+                          <span className="text-lg font-semibold">
+                            {m.title}
+                          </span>
 
-                      <p className="text-muted-foreground text-sm">
-                        {m.description}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <span className="bg-muted text-muted-foreground rounded-2xl px-3 py-1 text-sm">
-                          22 terms
-                        </span>
+                          <p className="text-muted-foreground text-sm">
+                            {m.description}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="bg-muted text-muted-foreground rounded-2xl px-3 py-1 text-sm">
+                            22 terms
+                          </span>
+                        </div>
                       </div>
+                    </CardHeader>
+                    <CardContent className="space-y-7">
+                      {JSON.stringify(m)}
                       <div className="flex flex-row items-center justify-between">
                         <div>
                           <p className="pb-2 text-sm text-gray-500">
                             Shared by:
                           </p>
                           <div className="flex gap-x-2 items-center">
-                            <Avatar>
+                            <Avatar className="size-10 border border-gray-100">
                               <AvatarImage
-                                src="https://github.com/shadcn.png"
-                                alt="@shadcn"
+                                src={
+                                  "https://imba-learn.railway.app" + m.ownerImg
+                                }
+                                alt={m.ownerName}
                               />
-                              <AvatarFallback>CN</AvatarFallback>
+                              <AvatarFallback>
+                                {m.ownerName.charAt(0) + m.ownerName.charAt(1)}
+                              </AvatarFallback>
                             </Avatar>
                             <p>{m.ownerName}</p>
                           </div>
