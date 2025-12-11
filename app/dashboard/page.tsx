@@ -19,6 +19,8 @@ interface Module {
   description: string;
   isPrivate: boolean;
   userId: string;
+  isOwner: boolean;
+  
 }
 
 interface CommunityModule extends Module {
@@ -120,7 +122,7 @@ export default function MainPage() {
   ) => {
     try {
       const res = await fetch(
-        `https://imba-server.up.railway.app/modules/${id}`,
+        `https://imba-server.up.railway.app/v2/modules/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -242,6 +244,7 @@ export default function MainPage() {
                 <ModuleListItem
                   key={m.id}
                   module={m}
+                  
                   onClick={handleModuleClick}
                   onDelete={handleDeleteModule}
                   onUpdate={handleUpdateModule}

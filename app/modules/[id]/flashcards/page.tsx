@@ -30,7 +30,7 @@ export default function FlashcardsClient() {
     async function loadModule() {
       try {
         const res = await fetch(
-          `https://imba-server.up.railway.app/modules/${moduleId}`,
+          `https://imba-server.up.railway.app/v2/modules/${moduleId}`,
           { credentials: "include" }
         );
         const data = await res.json();

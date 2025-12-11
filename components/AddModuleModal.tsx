@@ -57,7 +57,7 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
   
     try {
       // 1️⃣ create the module
-      const resModule = await fetch("https://imba-server.up.railway.app/modules", {
+      const resModule = await fetch("https://imba-server.up.railway.app/v2/modules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

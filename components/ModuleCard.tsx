@@ -7,6 +7,7 @@ type Module = {
   description: string;
   isPrivate: boolean;
   userId: string;
+  isOwner: boolean;
 };
 
 type ModuleCardProps = {
