@@ -429,14 +429,16 @@ export default function TestPageClient() {
           </div>
         )}
       </section>
-      <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
-        <button
-          onClick={() => (window.location.href = `/modules/${moduleId}`)}
-          className="ml-8 text-black flex items-center gap-2 text-lg"
-        >
-          <ArrowLeft size={20} /> Back to terms
-        </button>
-      </div>
+      <div className="mt-6 flex items-center justify-center">
+ 
+            <button
+              onClick={() => (window.location.href = `/modules/${moduleId}`)}
+              className="ml-8 text-black flex items-center gap-2 text-lg"
+            >
+              <ArrowLeft size={20} /> Back to terms
+            </button>
+          
+</div>
     </main>
   );
 }

@@ -76,28 +76,6 @@ export default function FlashcardsClient() {
       console.error("star error", err);
     }
   }
-  async function markTermAsStudied(id: string) {
-    try {
-      const res = await fetch(
-        `https://imba-server.up.railway.app/terms/update-status/${id}`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ success: true }),
-        }
-      );
-
-      const data = await res.json();
-      if (!data.ok) console.error("status update error", data);
-
-      setWords((prev) =>
-        prev.map((w) => (w.id === id ? { ...w, status: "completed" } : w))
-      );
-    } catch (err) {
-      console.error("failed to update status", err);
-    }
-  }
 
   function getHint(term: string) {
     const words = term.trim().split(" ");
@@ -161,51 +139,93 @@ export default function FlashcardsClient() {
 
         <div className="flex flex-col items-center justify-start pt-10 p-6 flex-1">
           <div className="relative w-full max-w-[650px] h-[60vh] sm:h-[400px] perspective">
-            <button
-              className="absolute top-3 left-14 z-20 text-gray-500"
-              onClick={() => speak(current.term)}
-            >
-              <Volume2 size={26} />
-            </button>
-            <button
-              className="absolute top-3 right-3 z-20"
-              onClick={() => toggleStar(current)}
-            >
-              <Star
-                size={28}
-                className={
-                  current.isStarred
-                    ? "text-yellow-400 fill-yellow-400"
-                    : "text-gray-400"
-                }
-              />
-            </button>
-
-            <button
-              className="absolute top-3 left-3 z-20 text-gray-500"
-              onClick={() => setShowHint((v) => !v)}
-            >
-              <Lightbulb size={26} />
-            </button>
-
-            {showHint && (
-              <div className="absolute top-12 left-3 z-20 bg-white px-3 py-2 rounded-xl shadow text-sm text-gray-600">
-                {getHint(current.definition)}
-              </div>
-            )}
-
             <div
               className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
                 flipped ? "rotate-y-180" : ""
               }`}
               onClick={() => setFlipped(!flipped)}
             >
+              {!flipped && (
+                <>
+                  <button
+                    className="absolute top-3 left-14 z-20 text-gray-500"
+                    onClick={(e) => {
+                      speak(current.term);
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Volume2 size={26} />
+                  </button>
+                  <button
+                    className="absolute top-3 right-3 z-20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStar(current);
+                    }}
+                  >
+                    <Star
+                      size={28}
+                      className={
+                        current.isStarred
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-400"
+                      }
+                    />
+                  </button>
+
+                  <button
+                    className="absolute top-3 left-3 z-20 text-gray-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowHint((v) => !v);
+                    }}
+                  >
+                    <Lightbulb size={26} />
+                  </button>
+                </>
+              )}
+
+              {showHint && (
+                <div className="absolute top-12 left-3 z-20 bg-white px-3 py-2 rounded-xl shadow text-sm text-gray-600">
+                  {getHint(current.definition)}
+                </div>
+              )}
+
               <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex items-center justify-center text-4xl font-semibold backface-hidden p-6">
                 {current.term}
               </div>
+              <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex flex-col justify-between p-6 rotate-y-180 backface-hidden">
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="text-gray-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      speak(current.term);
+                    }}
+                  >
+                    <Volume2 size={26} />
+                  </button>
 
-              <div className="absolute w-full h-full bg-white rounded-3xl shadow-lg flex items-center justify-center text-2xl p-8 rotate-y-180 backface-hidden">
-                {current.definition}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStar(current);
+                    }}
+                  >
+                    <Star
+                      size={28}
+                      className={
+                        current.isStarred
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-400"
+                      }
+                    />
+                  </button>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center text-2xl p-8">
+                  {current.definition}
+                </div>
               </div>
             </div>
           </div>
@@ -214,9 +234,6 @@ export default function FlashcardsClient() {
             <button
               className="px-5 py-2 bg-[#4255FF] text-white rounded-full"
               onClick={() => {
-                if (flipped) {
-                  markTermAsStudied(current.id);
-                }
                 setFlipped(false);
                 setShowHint(false);
                 setIndex((i) => Math.max(0, i - 1));
@@ -228,9 +245,6 @@ export default function FlashcardsClient() {
             <button
               className="px-5 py-2 bg-[#4255FF] text-white rounded-full"
               onClick={() => {
-                if (flipped) {
-                  markTermAsStudied(current.id);
-                }
                 setFlipped(false);
                 setShowHint(false);
                 setIndex((i) => Math.min(words.length - 1, i + 1));
@@ -239,15 +253,17 @@ export default function FlashcardsClient() {
               Next
             </button>
           </div>
-
-          <div className="w-full fixed bottom-0 left-0 bg-gray-200 shadow-md py-4">
+<div className="mt-6 flex">
+ 
             <button
               onClick={() => (window.location.href = `/modules/${moduleId}`)}
               className="ml-8 text-black flex items-center gap-2 text-lg"
             >
               <ArrowLeft size={20} /> Back to terms
             </button>
-          </div>
+          
+</div>
+         
         </div>
       </main>
 

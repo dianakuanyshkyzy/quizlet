@@ -27,6 +27,9 @@ export type Term = {
   definition: string;
   isStarred: boolean;
 };
+export type TermProgress = {
+  status: "not_started" | "in_progress" | "completed";
+};
 
 export type ApiTerm = {
   id: string;

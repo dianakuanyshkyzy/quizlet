@@ -65,7 +65,7 @@ export default function AuthPage() {
         ></div>
 
         <div className="absolute inset-0 mt-18 items-center justify-center ">
-          <h1 className="text-black text-4xl md:text-5xl font-bold text-center px-4">
+          <h1 className="text-white text-4xl md:text-5xl font-bold text-center px-4">
             learn with imba,
             <br /> be imba.
           </h1>

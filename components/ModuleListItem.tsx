@@ -56,8 +56,9 @@ export default function ModuleListItem({
         >
           {module.title}
         </div>
+        <div className="flex items-center gap-4">
         {module.isOwner && (
-          <div className="flex gap-4">
+          <div className="">
             <Edit2
               className="text-gray-500 cursor-pointer hover:scale-110 transition"
               size={20}
@@ -66,8 +67,9 @@ export default function ModuleListItem({
                 setEditing(true);
               }}
             />
-
-            <Trash2
+          </div>
+        )}
+        <Trash2
               className="text-gray-500 cursor-pointer hover:scale-110 transition"
               size={20}
               onClick={(e) => {
@@ -75,8 +77,7 @@ export default function ModuleListItem({
                 setConfirming(true);
               }}
             />
-          </div>
-        )}
+      </div>
       </div>
 
       <Dialog open={confirming} onOpenChange={setConfirming}>
@@ -109,14 +110,14 @@ export default function ModuleListItem({
             <DialogTitle>Edit Module</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <div className="space-y-3 selection:bg-blue-200">
             <Input
               placeholder="Title"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
             <textarea
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring "
               placeholder="Description"
               value={form.description}
               onChange={(e) =>

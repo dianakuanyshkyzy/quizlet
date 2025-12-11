@@ -48,7 +48,7 @@ export default function MainPage() {
   const handleDeleteModule = async (id: string) => {
     try {
       const res = await fetch(
-        `https://imba-server.up.railway.app/v2/modules/${id}`,
+        `https://imba-server.up.railway.app/modules/${id}`,
         {
           method: "DELETE",
           credentials: "include",

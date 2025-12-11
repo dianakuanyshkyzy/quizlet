@@ -46,12 +46,31 @@ export default function LearnPageClient({ id }: { id: string }) {
       if (terms.ok) {
         const t = await terms.json();
         if (mounted) {
-          const list: Term[] = (t?.data?.data || []).map((item: ApiTerm) => ({
-            ...item,
-            isStarred: !!item.isStarred,
-          }));
-          setTermsList(list);
-        }
+  const list: Term[] = await Promise.all(
+    (t?.data?.data || []).map(async (item: ApiTerm) => {
+      let status: string = "not_started"; // default
+      try {
+        const progressRes = await fetch(
+          `https://imba-server.up.railway.app/v2/terms/${item.id}/progress`,
+          { credentials: "include" }
+        );
+        const progressData = await progressRes.json();
+        status = progressData?.data?.status ?? "not_started";
+      } catch {
+        status = "not_started";
+      }
+
+      return {
+        ...item,
+        isStarred: !!item.isStarred,
+        status,
+      };
+    })
+  );
+
+  setTermsList(list);
+}
+
       }
 
       if (mounted) setLoading(false);
@@ -304,7 +323,7 @@ export default function LearnPageClient({ id }: { id: string }) {
 
       <Link href="/dashboard" className="mt-10">
         <span className="flex items-center gap-x-2 hover:underline underline-offset-4 hover:text-[#4255FF] transition">
-          <ArrowLeft size={20} /> Back to modules
+          <ArrowLeft size={20} /> Back to dashboard
         </span>
       </Link>
     </main>
