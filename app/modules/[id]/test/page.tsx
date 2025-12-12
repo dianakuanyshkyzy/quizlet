@@ -1,31 +1,25 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Header from "@/components/Header";
 import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-
-type Word = {
-  id: string;
-  term: string;
-  definition: string;
-  status: string;
-  isStarred: boolean;
-};
+import type { Term } from "@/lib/types/term.type";
+import type { ModuleInfo } from "../types";
 
 type Question =
-  | { type: "written"; word: Word; id: string }
-  | { type: "written2"; word: Word; id: string }
-  | { type: "mc"; word: Word; options: string[]; id: string }
-  | { type: "matching"; pairs: Word[]; id: string };
+  | { type: "written"; word: Term; id: string }
+  | { type: "written2"; word: Term; id: string }
+  | { type: "mc"; word: Term; options: string[]; id: string }
+  | { type: "matching"; pairs: Term[]; id: string };
+
+// (Answer map types removed as answers are not stored)
 
 export default function TestPageClient() {
-  const params = useParams();
+  const params = useParams<{ id: string; name?: string }>();
   const moduleId = params.id;
-  const [words, setWords] = useState<Word[]>([]);
-  const [loading, setLoading] = useState(true);
-  const moduleName = params.name || "Module";
+  const [words, setWords] = useState<Term[]>([]);
+  // const moduleName = params.name || "Module"; // Currently unused
   const [matchLeftSelected, setMatchLeftSelected] = useState<string | null>(
     null
   );
@@ -33,10 +27,10 @@ export default function TestPageClient() {
   const [matchPairsGiven, setMatchPairsGiven] = useState<
     Record<string, string>
   >({});
-  const [moduleInfo, setModuleInfo] = useState<{
-    title: string;
-    description: string;
-  } | null>(null);
+  const [moduleInfo, setModuleInfo] = useState<Pick<
+    ModuleInfo,
+    "title" | "description"
+  > | null>(null);
   useEffect(() => {
     async function loadModule() {
       try {
@@ -67,15 +61,22 @@ export default function TestPageClient() {
           { credentials: "include" }
         );
         const data = await res.json();
-        if (data.ok && Array.isArray(data.data?.data)) {
-          setWords(data.data.data);
+        if (
+          data.ok &&
+          Array.isArray(
+            (data as unknown as { data?: { data?: Term[] } }).data?.data
+          )
+        ) {
+          setWords(
+            (data as unknown as { data?: { data?: Term[] } }).data?.data || []
+          );
         } else {
           console.error("words data error", data);
         }
       } catch (err) {
         console.error("failed to load words", err);
       } finally {
-        setLoading(false);
+        // no-op
       }
     }
 
@@ -124,14 +125,14 @@ export default function TestPageClient() {
     }
 
     return qs;
-  }, [JSON.stringify(words)]);
+  }, [words]);
 
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  // Removed unused answers state
   const [showResult, setShowResult] = useState(false);
   const [wrongList, setWrongList] = useState<
-    { word: Word; correct: string; given?: string }[]
+    { word: Term; correct: string; given?: string }[]
   >([]);
   const current = questions[index];
   const total = questions.length;
@@ -139,19 +140,16 @@ export default function TestPageClient() {
   useEffect(() => {
     setIndex(0);
     setScore(0);
-    setAnswers({});
     setShowResult(false);
     setWrongList([]);
   }, [questions.length]);
   useEffect(() => {
     if (current?.type === "matching") {
-      setMatchRightOrder(
-        shuffle((current as any).pairs.map((p: Word) => p.definition))
-      );
+      setMatchRightOrder(shuffle(current.pairs.map((p) => p.definition)));
       setMatchLeftSelected(null);
       setMatchPairsGiven({});
     }
-  }, [current?.id]);
+  }, [current]);
   if (!questions || questions.length === 0) {
     return (
       <main className="min-h-screen flex items-center justify-center p-8">
@@ -160,7 +158,7 @@ export default function TestPageClient() {
     );
   }
 
-  const handleSubmitWritten = (word: Word, value: string) => {
+  const handleSubmitWritten = (word: Term, value: string) => {
     const correct =
       value.trim().toLowerCase() === word.definition.trim().toLowerCase();
     if (correct) setScore((s) => s + 1);
@@ -169,10 +167,10 @@ export default function TestPageClient() {
         ...arr,
         { word, correct: word.definition, given: value },
       ]);
-    setAnswers((a) => ({ ...a, [current.id]: { given: value, correct } }));
+    // answers map removed (unused)
     next();
   };
-  const handleSubmitWritten2 = (word: Word, value: string) => {
+  const handleSubmitWritten2 = (word: Term, value: string) => {
     const correct =
       value.trim().toLowerCase() === word.term.trim().toLowerCase();
     if (correct) setScore((s) => s + 1);
@@ -181,22 +179,23 @@ export default function TestPageClient() {
         ...arr,
         { word, correct: word.term, given: value },
       ]);
-    setAnswers((a) => ({ ...a, [current.id]: { given: value, correct } }));
+    // answers map removed (unused)
     next();
   };
   const handleSubmitMC = (choice: string) => {
-    const correct = choice === (current as any).word.definition;
+    if (current?.type !== "mc") return;
+    const correct = choice === current.word.definition;
     if (correct) setScore((s) => s + 1);
     else
       setWrongList((arr) => [
         ...arr,
         {
-          word: (current as any).word,
-          correct: (current as any).word.definition,
+          word: current.word,
+          correct: current.word.definition,
           given: choice,
         },
       ]);
-    setAnswers((a) => ({ ...a, [current.id]: { given: choice, correct } }));
+    // answers map removed (unused)
     setTimeout(next, 350);
   };
 
@@ -211,7 +210,8 @@ export default function TestPageClient() {
   };
 
   const submitMatching = () => {
-    const pairs = (current as any).pairs as Word[];
+    if (current?.type !== "matching") return;
+    const pairs = current.pairs;
     let correctCount = 0;
     pairs.forEach((p) => {
       const given = matchPairsGiven[p.term];
@@ -228,10 +228,7 @@ export default function TestPageClient() {
       }
     });
     setScore((s) => s + correctCount);
-    setAnswers((a) => ({
-      ...a,
-      [current.id]: { given: matchPairsGiven, correctCount },
-    }));
+    // answers map removed (unused)
     next();
   };
 
@@ -273,27 +270,23 @@ export default function TestPageClient() {
             {current.type === "written" && (
               <WrittenQuestion
                 key={current.id}
-                word={(current as any).word}
-                onSubmit={(val) =>
-                  handleSubmitWritten((current as any).word, val)
-                }
+                word={current.word}
+                onSubmit={(val) => handleSubmitWritten(current.word, val)}
               />
             )}
             {current.type === "written2" && (
               <WrittenQuestion2
                 key={current.id}
-                word={(current as any).word}
-                onSubmit={(val) =>
-                  handleSubmitWritten2((current as any).word, val)
-                }
+                word={current.word}
+                onSubmit={(val) => handleSubmitWritten2(current.word, val)}
               />
             )}
 
             {current.type === "mc" && (
               <MCQuestion
                 key={current.id}
-                word={(current as any).word}
-                options={(current as any).options}
+                word={current.word}
+                options={current.options}
                 onChoose={handleSubmitMC}
               />
             )}
@@ -307,7 +300,7 @@ export default function TestPageClient() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    {((current as any).pairs as Word[]).map((p) => (
+                    {current.pairs.map((p) => (
                       <button
                         key={p.term}
                         onClick={() => handleMatchSelectLeft(p.term)}
@@ -324,7 +317,7 @@ export default function TestPageClient() {
                   </div>
 
                   <div>
-                    {((current as any).pairs as Word[]).map((p) => {
+                    {current.pairs.map((p) => {
                       const assigned = matchPairsGiven[p.term];
                       return (
                         <motion.div
@@ -430,15 +423,13 @@ export default function TestPageClient() {
         )}
       </section>
       <div className="mt-6 flex items-center justify-center">
- 
-            <button
-              onClick={() => (window.location.href = `/modules/${moduleId}`)}
-              className="ml-8 text-black flex items-center gap-2 text-lg"
-            >
-              <ArrowLeft size={20} /> Back to terms
-            </button>
-          
-</div>
+        <button
+          onClick={() => (window.location.href = `/modules/${moduleId}`)}
+          className="ml-8 text-black flex items-center gap-2 text-lg"
+        >
+          <ArrowLeft size={20} /> Back to terms
+        </button>
+      </div>
     </main>
   );
 }
@@ -446,7 +437,7 @@ function WrittenQuestion({
   word,
   onSubmit,
 }: {
-  word: Word;
+  word: Term;
   onSubmit: (val: string) => void;
 }) {
   const [val, setVal] = useState("");
@@ -477,7 +468,7 @@ function WrittenQuestion2({
   word,
   onSubmit,
 }: {
-  word: Word;
+  word: Term;
   onSubmit: (val: string) => void;
 }) {
   const [val, setVal] = useState("");
@@ -513,7 +504,7 @@ function MCQuestion({
   options,
   onChoose,
 }: {
-  word: Word;
+  word: Term;
   options: string[];
   onChoose: (choice: string) => void;
 }) {

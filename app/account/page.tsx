@@ -5,7 +5,6 @@ import ProfileSection from "@/components/settings/profile-section";
 import EditProfileForm from "@/components/settings/edit-profile-form";
 import DeleteAccountSection from "@/components/settings/delete-account-section";
 import PasswordChangeForm from "@/components/settings/password-change-form";
-import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -28,32 +27,32 @@ export default function AccountPage() {
   const router = useRouter();
   const { logout } = useAuth();
 
-  const loadUser = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("https://imba-server.up.railway.app/users/me", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setUserData(data.data);
-      } else {
-        router.push("/login");
-      }
-    } catch (err) {
-      console.error("error loading user", err);
-      setUserData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadUser = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("https://imba-server.up.railway.app/users/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setUserData(data.data);
+        } else {
+          router.push("/login");
+        }
+      } catch (err) {
+        console.error("error loading user", err);
+        setUserData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadUser();
-  }, []);
+  }, [router]);
 
   const handleUpdate = async (updatedFields: Partial<UserData>) => {
     try {
@@ -81,14 +80,14 @@ export default function AccountPage() {
     if (!loading && !userData) {
       router.push("/login");
     }
-  }, [loading, userData]);
+  }, [loading, router, userData]);
 
   if (loading) return <p className="p-8">loading…</p>;
   if (!userData) return null;
 
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-br from-background to-secondary/20 py-8 px-4">
+      <main className="min-h-screen bg-linear-to-br from-background to-secondary/20 py-8 px-4">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8 flex items-center justify-between">
             <div>

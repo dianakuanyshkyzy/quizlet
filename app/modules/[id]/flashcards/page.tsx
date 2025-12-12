@@ -2,22 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import Header from "@/components/Header";
 import { ArrowLeft, Star, Lightbulb } from "lucide-react";
 import { Volume2 } from "lucide-react";
-type Word = {
-  id: string;
-  term: string;
-  definition: string;
-  status: string;
-  isStarred: boolean;
-};
+import { Term } from "@/lib/types/term.type";
 
 export default function FlashcardsClient() {
   const params = useParams();
   const moduleId = params.id;
 
-  const [words, setWords] = useState<Word[]>([]);
+  const [terms, setTerms] = useState<Term[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -48,7 +41,7 @@ export default function FlashcardsClient() {
     if (moduleId) loadModule();
   }, [moduleId]);
 
-  function shuffleArray(arr: any[]) {
+  function shuffleArray(arr: Term[]) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -56,20 +49,20 @@ export default function FlashcardsClient() {
     }
     return a;
   }
-  async function toggleStar(word: Word) {
+  async function toggleStar(term: Term) {
     try {
-      await fetch(`https://imba-server.up.railway.app/terms/${word.id}`, {
+      await fetch(`https://imba-server.up.railway.app/terms/${term.id}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          isStarred: !word.isStarred,
+          isStarred: !term.isStarred,
         }),
       });
 
-      setWords((prev) =>
+      setTerms((prev) =>
         prev.map((w) =>
-          w.id === word.id ? { ...w, isStarred: !w.isStarred } : w
+          w.id === term.id ? { ...w, isStarred: !w.isStarred } : w
         )
       );
     } catch (err) {
@@ -78,14 +71,14 @@ export default function FlashcardsClient() {
   }
 
   function getHint(term: string) {
-    const words = term.trim().split(" ");
+    const terms = term.trim().split(" ");
 
-    if (words.length === 1) {
-      const w = words[0];
+    if (terms.length === 1) {
+      const w = terms[0];
       if (w.length <= 4) return w[0] + "...";
       return w.slice(0, 3) + "...";
     }
-    return words.slice(0, Math.ceil(words.length / 2)).join(" ") + "…";
+    return terms.slice(0, Math.ceil(terms.length / 2)).join(" ") + "…";
   }
   function speak(text: string) {
     if (typeof window === "undefined") return;
@@ -99,30 +92,32 @@ export default function FlashcardsClient() {
   }
 
   useEffect(() => {
-    async function loadWords() {
+    async function loadTerms() {
       try {
         const res = await fetch(
           `https://imba-server.up.railway.app/terms?moduleId=${moduleId}`,
           { credentials: "include" }
         );
         const data = await res.json();
+        alert(JSON.stringify(data.data));
+        console.log("loaded terms:", data.data);
         if (data.ok && Array.isArray(data.data?.data)) {
           const shuffled = shuffleArray(data.data.data);
-          setWords(shuffled);
+          setTerms(shuffled);
         }
       } catch (err) {
-        console.error("failed to load words", err);
+        console.error("failed to load terms", err);
       } finally {
         setLoading(false);
       }
     }
 
-    if (moduleId) loadWords();
+    if (moduleId) loadTerms();
   }, [moduleId]);
 
-  const current = words[index];
-  if (loading) return <p className="text-center mt-20">Loading words...</p>;
-  if (!current) return <p className="text-center mt-20">No words found</p>;
+  const current = terms[index];
+  if (loading) return <p className="text-center mt-20">Loading terms...</p>;
+  if (!current) return <p className="text-center mt-20">No terms found</p>;
 
   return (
     <>
@@ -247,23 +242,20 @@ export default function FlashcardsClient() {
               onClick={() => {
                 setFlipped(false);
                 setShowHint(false);
-                setIndex((i) => Math.min(words.length - 1, i + 1));
+                setIndex((i) => Math.min(terms.length - 1, i + 1));
               }}
             >
               Next
             </button>
           </div>
-<div className="mt-6 flex">
- 
+          <div className="mt-6 flex">
             <button
               onClick={() => (window.location.href = `/modules/${moduleId}`)}
               className="ml-8 text-black flex items-center gap-2 text-lg"
             >
               <ArrowLeft size={20} /> Back to terms
             </button>
-          
-</div>
-         
+          </div>
         </div>
       </main>
 

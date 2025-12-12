@@ -102,7 +102,7 @@ export default function QuizClient() {
       .slice(0, 3)
       .map((w) => w.definition);
     setOptions(shuffle([current.definition, ...wrong]));
-  }, [current]);
+  }, [current, words]);
 
   function getNextStatus(current: TermProgress["status"], isCorrect: boolean) {
     const order: TermProgress["status"][] = [

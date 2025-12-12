@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import ModuleCard from "@/components/ModuleCard";
 import ModuleListItem from "@/components/ModuleListItem";
 import AddModuleModal from "@/components/AddModuleModal";
-import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,6 @@ interface Module {
   isPrivate: boolean;
   userId: string;
   isOwner: boolean;
-  
 }
 
 interface CommunityModule extends Module {
@@ -28,12 +26,6 @@ interface CommunityModule extends Module {
   ownerImg?: string;
   termsCount: number;
 }
-
-type CreateModule = {
-  title: string;
-  description: string;
-  isPrivate: boolean;
-};
 
 export default function MainPage() {
   const router = useRouter();
@@ -145,38 +137,38 @@ export default function MainPage() {
     }
   };
 
-  const handleAddModule = async (moduleData: CreateModule | null) => {
-    if (!moduleData) {
-      setShowModal(false);
-      return;
-    }
+  // const handleAddModule = async (moduleData: CreateModule | null) => {
+  //   if (!moduleData) {
+  //     setShowModal(false);
+  //     return;
+  //   }
 
-    try {
-      const res = await fetch(
-        "https://imba-server.up.railway.app/v2/modules/collection",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(moduleData),
-        }
-      );
+  //   try {
+  //     const res = await fetch(
+  //       "https://imba-server.up.railway.app/v2/modules/collection",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         credentials: "include",
+  //         body: JSON.stringify(moduleData),
+  //       }
+  //     );
 
-      const result = await res.json();
-      if (!res.ok || !result.ok) {
-        console.error("module creation error", result);
-        return;
-      }
+  //     const result = await res.json();
+  //     if (!res.ok || !result.ok) {
+  //       console.error("module creation error", result);
+  //       return;
+  //     }
 
-      console.log("CREATED MODULE:", result.data.id);
-      setModules((prev) => [result.data, ...prev]);
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  //     console.log("CREATED MODULE:", result.data.id);
+  //     setModules((prev) => [result.data, ...prev]);
+  //     setShowModal(false);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -244,7 +236,6 @@ export default function MainPage() {
                 <ModuleListItem
                   key={m.id}
                   module={m}
-                  
                   onClick={handleModuleClick}
                   onDelete={handleDeleteModule}
                   onUpdate={handleUpdateModule}

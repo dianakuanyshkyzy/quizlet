@@ -32,7 +32,6 @@ export default function DeleteAccountSection() {
         },
       });
 
-      const data = await res.json();
       if (res.ok) {
         // Clear authentication cookies before redirecting
         await clearAuthCookies();
