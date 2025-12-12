@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import type { Term } from "@/lib/types/term.type";
 import type { ModuleInfo } from "../types";
+import { useModule } from "@/lib/hooks/useModules";
+import { useTerms } from "@/lib/hooks/useTerms";
 
 type Question =
   | { type: "written"; word: Term; id: string }
@@ -18,8 +20,11 @@ type Question =
 export default function TestPageClient() {
   const params = useParams<{ id: string; name?: string }>();
   const moduleId = params.id;
+
+  const { data: moduleData } = useModule(moduleId);
+  const { data: termsData = [] } = useTerms(moduleId);
+
   const [words, setWords] = useState<Term[]>([]);
-  // const moduleName = params.name || "Module"; // Currently unused
   const [matchLeftSelected, setMatchLeftSelected] = useState<string | null>(
     null
   );
@@ -27,63 +32,19 @@ export default function TestPageClient() {
   const [matchPairsGiven, setMatchPairsGiven] = useState<
     Record<string, string>
   >({});
-  const [moduleInfo, setModuleInfo] = useState<Pick<
-    ModuleInfo,
-    "title" | "description"
-  > | null>(null);
-  useEffect(() => {
-    async function loadModule() {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/modules/${moduleId}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        if (data.ok && data.data) {
-          setModuleInfo({
-            title: data.data.title,
-            description: data.data.description,
-          });
-        }
-      } catch (err) {
-        console.error("failed to load module info", err);
-      }
-    }
 
-    if (moduleId) loadModule();
-  }, [moduleId]);
+  const moduleInfo = moduleData?.data
+    ? {
+        title: moduleData.data.title,
+        description: moduleData.data.description,
+      }
+    : null;
 
   useEffect(() => {
-    async function loadWords() {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/terms?moduleId=${moduleId}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        if (
-          data.ok &&
-          Array.isArray(
-            (data as unknown as { data?: { data?: Term[] } }).data?.data
-          )
-        ) {
-          setWords(
-            (data as unknown as { data?: { data?: Term[] } }).data?.data || []
-          );
-        } else {
-          console.error("words data error", data);
-        }
-      } catch (err) {
-        console.error("failed to load words", err);
-      } finally {
-        // no-op
-      }
+    if (termsData.length > 0) {
+      setWords(termsData);
     }
-
-    if (moduleId) {
-      loadWords();
-    }
-  }, [moduleId]);
+  }, [termsData]);
 
   const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
   const id = (prefix = "") =>

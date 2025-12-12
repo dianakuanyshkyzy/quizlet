@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Lightbulb, Star } from "lucide-react";
 import type { Term, TermProgress } from "../types";
 import { getTermProgress, updateTermProgress } from "@/lib/api";
+import { useModule } from "@/lib/hooks/useModules";
+import { useTerms, useUpdateTerm } from "@/lib/hooks/useTerms";
 
 function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -12,89 +14,58 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function QuizClient() {
   const params = useParams();
-  const moduleId = params.id;
+  const moduleId = params.id as string;
+
+  const { data: moduleData, isLoading: moduleLoading } = useModule(moduleId);
+  const { data: termsData = [], isLoading: termsLoading } = useTerms(moduleId);
+  const updateTerm = useUpdateTerm();
 
   const [words, setWords] = useState<Term[]>([]);
   const [progressMap, setProgressMap] = useState<
     Record<string, TermProgress["status"]>
   >({});
-  const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [correct, setCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [moduleInfo, setModuleInfo] = useState<{
-    title: string;
-    description: string;
-  } | null>(null);
   const [options, setOptions] = useState<string[]>([]);
+
+  const loading = moduleLoading || termsLoading;
+  const moduleInfo = moduleData?.data
+    ? {
+        title: moduleData.data.title,
+        description: moduleData.data.description,
+      }
+    : null;
 
   const current = words[index];
   const total = words.length;
 
   useEffect(() => {
-    if (!moduleId) return;
-    async function loadModule() {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/modules/${moduleId}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        if (data.ok && data.data) {
-          setModuleInfo({
-            title: data.data.title,
-            description: data.data.description,
-          });
-        }
-      } catch (err) {
-        console.error("failed to load module info", err);
-      }
+    if (termsData.length > 0) {
+      setWords(termsData);
+
+      // Load progress for all terms
+      Promise.all(
+        termsData.map(async (term: Term) => {
+          try {
+            const res = await getTermProgress(term.id);
+            return { id: term.id, status: res.data?.status ?? "not_started" };
+          } catch {
+            return { id: term.id, status: "not_started" as const };
+          }
+        })
+      ).then((progressArr) => {
+        const map: Record<string, TermProgress["status"]> = {};
+        progressArr.forEach(({ id, status }) => {
+          map[id] = status;
+        });
+        setProgressMap(map);
+      });
     }
-    loadModule();
-  }, [moduleId]);
-
-  useEffect(() => {
-    if (!moduleId) return;
-
-    async function loadWordsAndProgress() {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/terms?moduleId=${moduleId}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        if (data.ok && Array.isArray(data.data?.data)) {
-          setWords(data.data.data);
-
-          const progressArr = await Promise.all(
-            data.data.data.map(async (term: Term) => {
-              try {
-                const res = await getTermProgress(term.id);
-                return res.data?.status ?? "not_started";
-              } catch {
-                return "not_started";
-              }
-            })
-          );
-
-          const map: Record<string, TermProgress["status"]> = {};
-          data.data.data.forEach((term: Term, i: number) => {
-            map[term.id] = progressArr[i];
-          });
-          setProgressMap(map);
-        }
-      } catch (err) {
-        console.error("failed to load words/progress", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadWordsAndProgress();
-  }, [moduleId]);
+  }, [termsData]);
 
   useEffect(() => {
     if (!current) return;
@@ -117,22 +88,16 @@ export default function QuizClient() {
       : order[Math.max(idx - 1, 0)];
   }
 
-  async function toggleStar(word: Term) {
-    try {
-      await fetch(`https://imba-server.up.railway.app/terms/${word.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isStarred: !word.isStarred }),
-      });
-      setWords((prev) =>
-        prev.map((w) =>
-          w.id === word.id ? { ...w, isStarred: !w.isStarred } : w
-        )
-      );
-    } catch (err) {
-      console.error("star error", err);
-    }
+  function toggleStar(word: Term) {
+    updateTerm.mutate({
+      id: word.id,
+      data: { isStarred: !word.isStarred },
+    });
+    setWords((prev) =>
+      prev.map((w) =>
+        w.id === word.id ? { ...w, isStarred: !w.isStarred } : w
+      )
+    );
   }
   async function check(answer: string) {
     if (!current) return;
@@ -174,10 +139,7 @@ export default function QuizClient() {
           completedTerms: counts.completed,
         };
 
-        // update module info with new progress
-        setModuleInfo((info) =>
-          info ? { ...info, progress: moduleProgress } : info
-        );
+        // Progress tracking is managed elsewhere
 
         return updatedMap;
       });

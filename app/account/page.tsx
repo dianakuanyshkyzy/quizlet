@@ -7,6 +7,7 @@ import DeleteAccountSection from "@/components/settings/delete-account-section";
 import PasswordChangeForm from "@/components/settings/password-change-form";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMe, useUpdateMe } from "@/lib/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
@@ -22,67 +23,31 @@ type UserData = {
 
 export default function AccountPage() {
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: me, isLoading: meLoading } = useMe();
+  const updateMe = useUpdateMe();
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
 
   useEffect(() => {
-    const loadUser = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("https://imba-server.up.railway.app/users/me", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          setUserData(data.data);
-        } else {
-          router.push("/login");
-        }
-      } catch (err) {
-        console.error("error loading user", err);
-        setUserData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, [router]);
+    if (me) setUserData(me as any);
+  }, [me]);
 
   const handleUpdate = async (updatedFields: Partial<UserData>) => {
-    try {
-      const res = await fetch("https://imba-server.up.railway.app/users/me", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedFields),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to update profile");
-      }
-
-      const updatedUser = await res.json();
-      setUserData(updatedUser.data);
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Update error:", err);
-    }
+    updateMe.mutate(updatedFields, {
+      onSuccess: (user) => {
+        setUserData(user as any);
+        setIsEditing(false);
+      },
+    });
   };
   useEffect(() => {
-    if (!loading && !userData) {
+    if (!meLoading && !userData) {
       router.push("/login");
     }
-  }, [loading, router, userData]);
+  }, [meLoading, router, userData]);
 
-  if (loading) return <p className="p-8">loading…</p>;
+  if (meLoading) return <p className="p-8">loading…</p>;
   if (!userData) return null;
 
   return (

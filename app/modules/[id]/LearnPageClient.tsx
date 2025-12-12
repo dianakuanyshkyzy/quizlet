@@ -11,151 +11,54 @@ import AddTerm from "./_components/AddTerm";
 import { Button } from "@/components/ui/button";
 import ModuleHeader from "./_components/ModuleHeader";
 import type { ApiTerm, ModuleResponse, Term } from "./types";
+import { useModule } from "@/lib/hooks/useModules";
+import {
+  useTerms,
+  useCreateTerm,
+  useUpdateTerm,
+  useDeleteTerm,
+} from "@/lib/hooks/useTerms";
+import { toast } from "sonner";
 
 export default function LearnPageClient({ id }: { id: string }) {
-  const [moduleData, setModuleData] = useState<ModuleResponse | null>(null);
-  const [termsList, setTermsList] = useState<Term[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: moduleData, isLoading: moduleLoading } = useModule(id);
+  const { data: terms = [], isLoading: termsLoading } = useTerms(id);
+  const createTerm = useCreateTerm();
+  const updateTerm = useUpdateTerm();
+  const deleteTerm = useDeleteTerm();
 
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    setError(null);
+  const loading = moduleLoading || termsLoading;
 
-    (async () => {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/v2/modules/${id}`,
-          { credentials: "include" }
-        );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: ModuleResponse = await res.json();
-        if (mounted) setModuleData(data);
-      } catch (err) {
-        if (err instanceof Error && mounted) {
-          console.error("module fetch error", err);
-          setError(err.message);
-        }
-      }
+  function toggleStar(term: Term) {
+    updateTerm.mutate({
+      id: term.id,
+      data: { isStarred: !term.isStarred },
+    });
+  }
 
-      const terms = await fetch(
-        `https://imba-server.up.railway.app/terms?moduleId=${id}`,
-        { credentials: "include" }
-      );
-      if (terms.ok) {
-        const t = await terms.json();
-        if (mounted) {
-  const list: Term[] = await Promise.all(
-    (t?.data?.data || []).map(async (item: ApiTerm) => {
-      let status: string = "not_started"; // default
-      try {
-        const progressRes = await fetch(
-          `https://imba-server.up.railway.app/v2/terms/${item.id}/progress`,
-          { credentials: "include" }
-        );
-        const progressData = await progressRes.json();
-        status = progressData?.data?.status ?? "not_started";
-      } catch {
-        status = "not_started";
-      }
-
-      return {
-        ...item,
-        isStarred: !!item.isStarred,
-        status,
-      };
-    })
-  );
-
-  setTermsList(list);
-}
-
-      }
-
-      if (mounted) setLoading(false);
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [id]);
-
-  async function toggleStar(term: Term) {
-    try {
-      await fetch(`https://imba-server.up.railway.app/terms/${term.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          isStarred: !term.isStarred,
-        }),
-      });
-
-      setTermsList((prev) =>
-        prev.map((t) =>
-          t.id === term.id ? { ...t, isStarred: !t.isStarred } : t
-        )
-      );
-    } catch (err) {
-      console.error("star error", err);
+  function submitNewTerm(term: string, definition: string) {
+    if (!term.trim() || !definition.trim()) {
+      toast.error("Term and definition are required");
+      return;
     }
-  }
 
-  async function submitNewTerm(term: string, definition: string) {
-    if (!term.trim() || !definition.trim()) return;
-
-    const res = await fetch(`https://imba-server.up.railway.app/terms`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        term: term,
-        definition: definition,
-        moduleId: id,
-        isStarred: false,
-      }),
+    createTerm.mutate({
+      term,
+      definition,
+      moduleId: id,
+      isStarred: false,
     });
-
-    if (!res.ok) return;
-
-    const created = await res.json();
-
-    setTermsList((prev) => [
-      ...prev,
-      { ...created.data, isStarred: !!created.data?.isStarred },
-    ]);
   }
 
-  async function deleteTerm(termId: string) {
-    await fetch(`https://imba-server.up.railway.app/terms/${termId}`, {
-      method: "DELETE",
-      credentials: "include",
+  function handleDeleteTerm(termId: string) {
+    deleteTerm.mutate(termId);
+  }
+
+  function submitEdit(termId: string, term: string, definition: string) {
+    updateTerm.mutate({
+      id: termId,
+      data: { term, definition },
     });
-    setTermsList((prev) => prev.filter((t) => t.id !== termId));
-  }
-
-  async function submitEdit(termId: string, term: string, definition: string) {
-    const res = await fetch(
-      `https://imba-server.up.railway.app/terms/${termId}`,
-      {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          term: term,
-          definition: definition,
-        }),
-      }
-    );
-
-    if (!res.ok) return;
-
-    setTermsList((prev) =>
-      prev.map((t) =>
-        t.id === termId ? { ...t, term: term, definition: definition } : t
-      )
-    );
   }
 
   async function collectModule(moduleId: string) {
@@ -169,24 +72,17 @@ export default function LearnPageClient({ id }: { id: string }) {
       );
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const payload: ModuleResponse | null = await res.json();
-
-      if (payload?.data) {
-        setModuleData(payload);
-      } else {
-        setModuleData((prev: ModuleResponse | null) =>
-          prev?.data
-            ? { ...prev, data: { ...prev.data, isCollected: true } }
-            : prev
-        );
-      }
+      toast.success("Module collected!");
+      // Refetch the module data
+      window.location.reload();
     } catch (err) {
       console.error("collect module error", err);
+      toast.error("Failed to collect module");
     }
   }
 
   const moduleInfo = moduleData?.data;
+  const error = null; // Remove old error state since queries handle errors
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-gray-50 relative p-8 pb-20">
@@ -303,13 +199,13 @@ export default function LearnPageClient({ id }: { id: string }) {
           <>
             <h3 className="text-2xl font-semibold mb-4">Terms</h3>
             <div className="space-y-3">
-              {termsList.map((t) => (
+              {terms.map((t) => (
                 <TermItem
                   isOwned={!!moduleData?.data?.isOwner}
                   isCollected={!!moduleData?.data?.isCollected}
                   key={t.id}
                   term={t}
-                  onDelete={() => deleteTerm(t.id)}
+                  onDelete={() => handleDeleteTerm(t.id)}
                   onToggleStar={() => toggleStar(t)}
                   onSaveEdit={submitEdit}
                 />

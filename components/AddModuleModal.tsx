@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useCreateModule } from "@/lib/hooks/useModules";
+import { useCreateTerm } from "@/lib/hooks/useTerms";
+import { toast } from "sonner";
 
 type Word = {
   term: string;
@@ -13,11 +16,9 @@ type CreateModule = {
   isPrivate: boolean;
 };
 
-
 type AddModuleModalProps = {
   onAdd: (data: CreateModule | null) => void;
 };
-
 
 export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
   const [name, setName] = useState("");
@@ -25,94 +26,77 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
   const [numWords, setNumWords] = useState(1);
   const [words, setWords] = useState<Word[]>([{ term: "", translation: "" }]);
 
+  const createModule = useCreateModule();
+  const createTerm = useCreateTerm();
+
   const handleNumWordsChange = (value: number) => {
     setNumWords(value);
     const newWords = [...words];
-    while (newWords.length < value) newWords.push({ term: "", translation: "" });
+    while (newWords.length < value)
+      newWords.push({ term: "", translation: "" });
     while (newWords.length > value) newWords.pop();
     setWords(newWords);
   };
 
-  const handleWordChange = (index: number, field: "term" | "translation", value: string) => {
+  const handleWordChange = (
+    index: number,
+    field: "term" | "translation",
+    value: string
+  ) => {
     const newWords = [...words];
     newWords[index][field] = value;
     setWords(newWords);
   };
 
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   onAdd({
-  //     title: name,
-  //     description: description,
-  //     isPrivate: false
-  //   });    
-  //   setName("");
-  //   setDescription("");
-  //   setNumWords(1);
-  //   setWords([{ term: "", translation: "" }]); 
-  //   //const createdModule = fetch from moduleId, then pass the information from the json with information to add words on endpoint post /terms with for loop
-  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    try {
-      // 1️⃣ create the module
-      const resModule = await fetch("https://imba-server.up.railway.app/v2/modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title: name,
-          description,
-          isPrivate: false
-        }),
-      });
-      const moduleData = await resModule.json();
-      if (!resModule.ok || !moduleData.ok) throw new Error("Module creation failed");
-  
-      const moduleId = moduleData.data.id; // get the created module ID
-  
-      // 2️⃣ create all words
-      for (const word of words) {
-        if (!word.term || !word.translation) continue; // skip empty fields
-  
-        await fetch("https://imba-server.up.railway.app/terms", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            moduleId,
-            term: word.term,
-            definition: word.translation,
-            isStarred: false
-          }),
-        });
-      }
-  
-      // 3️⃣ optional: fetch all terms for confirmation
-      const resTerms = await fetch(`https://imba-server.up.railway.app/terms?moduleId=${moduleId}`, {
-        credentials: "include",
-      });
-      const termsData = await resTerms.json();
-      console.log("All terms for module:", termsData);
-  
-      // 4️⃣ reset modal state
-      setName("");
-      setDescription("");
-      setNumWords(1);
-      setWords([{ term: "", translation: "" }]);
-  
-      onAdd(null); // notify parent to refresh modules
-  
-    } catch (err) {
-      console.error(err);
+
+    if (!name.trim()) {
+      toast.error("Module title is required");
+      return;
     }
+
+    createModule.mutate(
+      { title: name, description, isPrivate: false },
+      {
+        onSuccess: async (created) => {
+          const moduleId = created.id;
+          // Create words sequentially (could be parallelized if API supports)
+          for (const word of words) {
+            if (!word.term || !word.translation) continue;
+            await new Promise<void>((resolve) => {
+              createTerm.mutate(
+                {
+                  moduleId,
+                  term: word.term,
+                  definition: word.translation,
+                  isStarred: false,
+                },
+                {
+                  onSuccess: () => resolve(),
+                  onError: () => resolve(), // continue on error but toast is handled in hook
+                }
+              );
+            });
+          }
+
+          // reset
+          setName("");
+          setDescription("");
+          setNumWords(1);
+          setWords([{ term: "", translation: "" }]);
+          onAdd(null);
+        },
+      }
+    );
   };
-  
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <form className="bg-white p-6 rounded-xl shadow-xl w-96 max-h-[90vh] overflow-y-auto" onSubmit={handleSubmit}>
+      <form
+        className="bg-white p-6 rounded-xl shadow-xl w-96 max-h-[90vh] overflow-y-auto"
+        onSubmit={handleSubmit}
+      >
         <h2 className="text-xl font-bold mb-4">Add Module</h2>
 
         <input
@@ -129,7 +113,6 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
           onChange={(e) => setDescription(e.target.value)}
           className="w-full p-2 border rounded mb-2"
         />
-        
 
         {words.map((word, idx) => (
           <div key={idx} className="flex gap-2 mb-2">
@@ -144,20 +127,33 @@ export default function AddModuleModal({ onAdd }: AddModuleModalProps) {
               type="text"
               placeholder="Translation"
               value={word.translation}
-              onChange={(e) => handleWordChange(idx, "translation", e.target.value)}
+              onChange={(e) =>
+                handleWordChange(idx, "translation", e.target.value)
+              }
               className="w-1/2 p-2 border rounded"
             />
           </div>
         ))}
 
         <div className="flex justify-end gap-2 mt-4">
-          <button type="submit" className="bg-[#4255FF] text-white py-2 px-4 rounded">
+          <button
+            type="submit"
+            className="bg-[#4255FF] text-white py-2 px-4 rounded"
+          >
             Add Module
           </button>
-          <button type="button" className="border-1 border-gray-300 py-2 px-4 rounded" onClick={() => handleNumWordsChange(numWords + 1)}>
+          <button
+            type="button"
+            className="border border-gray-300 py-2 px-4 rounded"
+            onClick={() => handleNumWordsChange(numWords + 1)}
+          >
             Add word
           </button>
-          <button type="button" className="border-1 border-gray-300 py-2 px-4 rounded" onClick={() => onAdd(null)}>
+          <button
+            type="button"
+            className="border border-gray-300 py-2 px-4 rounded"
+            onClick={() => onAdd(null)}
+          >
             Cancel
           </button>
         </div>

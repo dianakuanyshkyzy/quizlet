@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useRegister } from "@/lib/hooks/useAuth";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const register = useRegister();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -30,31 +32,18 @@ export default function AuthPage() {
     e.preventDefault();
     setError("");
 
-    try {
-      const url = "https://imba-server.up.railway.app/auth/register";
-      const bodyData = { name, email, password };
-
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      console.log("AUTH RESPONSE:", data);
-
-      if (!data.ok) {
-        throw new Error(data.message || "Authentication failed");
+    register.mutate(
+      { name, email, password },
+      {
+        onSuccess: async () => {
+          await checkAuthentication();
+          router.push("/dashboard");
+        },
+        onError: (err: Error) => {
+          setError(err.message);
+        },
       }
-
-      // Re-check authentication after successful registration
-      await checkAuthentication();
-      router.push("/dashboard");
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError(String(err));
-    }
+    );
   };
 
   return (

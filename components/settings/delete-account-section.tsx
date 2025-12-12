@@ -12,36 +12,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { AlertTriangle } from "lucide-react";
 import { clearAuthCookies } from "@/lib/auth";
+import { useDeleteMe } from "@/lib/hooks/useUser";
+import { toast } from "sonner";
 
 export default function DeleteAccountSection() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const deleteMe = useDeleteMe();
 
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (confirmText !== "DELETE MY ACCOUNT") return;
     setIsLoading(true);
 
-    try {
-      const res = await fetch("https://imba-server.up.railway.app/users/me", {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (res.ok) {
-        // Clear authentication cookies before redirecting
+    deleteMe.mutate(undefined, {
+      onSuccess: async () => {
         await clearAuthCookies();
         window.location.href = "/";
-      }
-    } catch (error) {
-      console.error("Failed to delete account:", error);
-    } finally {
-      setIsLoading(false);
-    }
+      },
+      onError: () => {
+        toast.error("Failed to delete account");
+        setIsLoading(false);
+      },
+    });
   };
 
   return (

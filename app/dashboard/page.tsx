@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ModuleCard from "@/components/ModuleCard";
 import ModuleListItem from "@/components/ModuleListItem";
 import AddModuleModal from "@/components/AddModuleModal";
@@ -10,167 +10,51 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface Module {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  isPrivate: boolean;
-  userId: string;
-  isOwner: boolean;
-}
-
-interface CommunityModule extends Module {
-  ownerName: string;
-  ownerImg?: string;
-  termsCount: number;
-}
+import {
+  useModules,
+  useCommunityModules,
+  useDeleteModule,
+  useUpdateModule,
+} from "@/lib/hooks/useModules";
+import { toast } from "sonner";
+import type {
+  Module as ModuleType,
+  CommunityModule as CommunityModuleType,
+} from "@/lib/api";
 
 export default function MainPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [modules, setModules] = useState<Module[]>([]);
-  const [communityModules, setCommunityModules] = useState<CommunityModule[]>(
-    []
-  );
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  const handleDeleteModule = async (id: string) => {
-    try {
-      const res = await fetch(
-        `https://imba-server.up.railway.app/modules/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+  // Queries
+  const {
+    data: modules = [],
+    isLoading: modulesLoading,
+    isError: modulesError,
+  } = useModules();
+  const {
+    data: communityModules = [],
+    isLoading: communityLoading,
+    isError: communityError,
+  } = useCommunityModules();
 
-      const data = await res.json();
+  // Mutations
+  const deleteModule = useDeleteModule();
+  const updateModule = useUpdateModule();
 
-      if (!res.ok || !data.ok) {
-        console.error("delete failed", data);
-        return;
-      }
-
-      setModules((prev) => prev.filter((m) => m.id !== id));
-    } catch (err) {
-      console.error("delete error", err);
-    }
+  const handleDeleteModule = (id: string) => {
+    deleteModule.mutate(id);
   };
 
-  const loadModules = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        "https://imba-server.up.railway.app/v2/modules/collection",
-        {
-          credentials: "include",
-        }
-      );
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.data)) {
-        setModules(data.data);
-      } else {
-        setModules([]);
-      }
-    } catch (err) {
-      console.error("failed to load modules", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCommunityModules = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        "https://imba-server.up.railway.app/v2/modules/public",
-        {
-          credentials: "include",
-        }
-      );
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.data)) {
-        setCommunityModules(data.data);
-      } else {
-        setCommunityModules([]);
-      }
-    } catch (err) {
-      console.error("failed to load community modules", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadModules();
-    loadCommunityModules();
-  }, []);
-  const handleUpdateModule = async (
+  const handleUpdateModule = (
     id: string,
     data: { title: string; description: string; isPrivate: boolean }
   ) => {
-    try {
-      const res = await fetch(
-        `https://imba-server.up.railway.app/v2/modules/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(data),
-        }
-      );
-
-      const result = await res.json();
-      if (!res.ok || !result.ok) {
-        console.error("update failed", result);
-        return;
-      }
-
-      setModules((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, ...data } : m))
-      );
-    } catch (err) {
-      console.error("update error", err);
-    }
+    updateModule.mutate({ id, data });
   };
 
-  // const handleAddModule = async (moduleData: CreateModule | null) => {
-  //   if (!moduleData) {
-  //     setShowModal(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await fetch(
-  //       "https://imba-server.up.railway.app/v2/modules/collection",
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         credentials: "include",
-  //         body: JSON.stringify(moduleData),
-  //       }
-  //     );
-
-  //     const result = await res.json();
-  //     if (!res.ok || !result.ok) {
-  //       console.error("module creation error", result);
-  //       return;
-  //     }
-
-  //     console.log("CREATED MODULE:", result.data.id);
-  //     setModules((prev) => [result.data, ...prev]);
-  //     setShowModal(false);
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
-
-  if (loading) {
+  if (modulesLoading || communityLoading) {
     return (
       <main className="p-8 min-h-screen max-w-[860px] mx-auto">
         <p>Loading modules...</p>
@@ -178,11 +62,15 @@ export default function MainPage() {
     );
   }
 
-  const filteredModules = modules.filter((m) =>
+  if (modulesError || communityError) {
+    toast.error("Failed to load modules");
+  }
+
+  const filteredModules = modules.filter((m: ModuleType) =>
     m.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleModuleClick = (m: Module) => {
+  const handleModuleClick = (m: ModuleType) => {
     router.push(`/modules/${m.id}`);
   };
 
@@ -203,7 +91,7 @@ export default function MainPage() {
               Recent Modules
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-              {recentModules.map((m) => (
+              {recentModules.map((m: ModuleType) => (
                 <ModuleCard key={m.id} module={m} onClick={handleModuleClick} />
               ))}
             </div>
@@ -232,7 +120,7 @@ export default function MainPage() {
             </div>
 
             <div className="flex flex-col font-semibold text-lg">
-              {filteredModules.map((m) => (
+              {filteredModules.map((m: ModuleType) => (
                 <ModuleListItem
                   key={m.id}
                   module={m}
@@ -247,7 +135,6 @@ export default function MainPage() {
               <AddModuleModal
                 onAdd={() => {
                   setShowModal(false);
-                  loadModules();
                 }}
               />
             )}
@@ -273,7 +160,7 @@ export default function MainPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {communityModules.map((m) => (
+                {communityModules.map((m: CommunityModuleType) => (
                   <Card key={m.id}>
                     <CardHeader>
                       <div className="flex justify-between">

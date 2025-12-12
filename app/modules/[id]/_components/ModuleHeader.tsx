@@ -21,9 +21,10 @@ export default function ModuleHeader({ module }: ModuleHeaderProps) {
             <span className="bg-gray-200 text-gray-500 p-1 px-3 text-sm rounded-full ml-2">
               {module.isPrivate ? "Private module" : "Public module"}
             </span>
+
             {module.termsCount !== 0 && module.progress && (
               <span className="bg-gray-200 text-gray-500 p-1 px-3 text-sm rounded-full ml-2">
-                {module.progress.completed / module.termsCount}
+                {module.progress.completed * 100}
                 {"% "}
                 completed
               </span>

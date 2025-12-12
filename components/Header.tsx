@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "./ui/skeleton";
+import { useMe } from "@/lib/hooks/useUser";
 
 interface UserData {
   data: {
@@ -20,25 +21,13 @@ interface UserData {
 export default function Header() {
   const [user, setUser] = useState<UserData | null>(null);
   const { isAuthenticated, isLoading, logout } = useAuth();
+  const { data: me } = useMe();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("https://imba-server.up.railway.app/users/me", {
-          credentials: "include",
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+    if (me) {
+      setUser({ data: me } as unknown as UserData);
+    }
+  }, [me]);
 
   const getInitials = (name: string) => {
     return name

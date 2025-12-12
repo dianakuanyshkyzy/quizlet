@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLogin } from "@/lib/hooks/useAuth";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const login = useLogin();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -29,31 +31,18 @@ export default function AuthPage() {
     e.preventDefault();
     setError("");
 
-    try {
-      const url = "https://imba-server.up.railway.app/auth/login";
-      const bodyData = { email, password };
-
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      console.log("AUTH RESPONSE:", data);
-
-      if (!data.ok) {
-        throw new Error(data.message || "Authentication failed");
+    login.mutate(
+      { email, password },
+      {
+        onSuccess: async () => {
+          await checkAuthentication();
+          router.push("/dashboard");
+        },
+        onError: (err: Error) => {
+          setError(err.message);
+        },
       }
-
-      // Re-check authentication after successful login
-      await checkAuthentication();
-      router.push("/dashboard");
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError(String(err));
-    }
+    );
   };
 
   return (

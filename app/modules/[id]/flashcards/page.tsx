@@ -5,41 +5,35 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Star, Lightbulb } from "lucide-react";
 import { Volume2 } from "lucide-react";
 import { Term } from "@/lib/types/term.type";
+import { useModule } from "@/lib/hooks/useModules";
+import { useTerms, useUpdateTerm } from "@/lib/hooks/useTerms";
 
 export default function FlashcardsClient() {
   const params = useParams();
-  const moduleId = params.id;
+  const moduleId = params.id as string;
+
+  const { data: moduleData, isLoading: moduleLoading } = useModule(moduleId);
+  const { data: termsData = [], isLoading: termsLoading } = useTerms(moduleId);
+  const updateTerm = useUpdateTerm();
 
   const [terms, setTerms] = useState<Term[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [moduleInfo, setModuleInfo] = useState<{
-    title: string;
-    description: string;
-  } | null>(null);
-  useEffect(() => {
-    async function loadModule() {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/v2/modules/${moduleId}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        if (data.ok && data.data) {
-          setModuleInfo({
-            title: data.data.title,
-            description: data.data.description,
-          });
-        }
-      } catch (err) {
-        console.error("failed to load module info", err);
-      }
-    }
 
-    if (moduleId) loadModule();
-  }, [moduleId]);
+  const loading = moduleLoading || termsLoading;
+  const moduleInfo = moduleData?.data
+    ? {
+        title: moduleData.data.title,
+        description: moduleData.data.description,
+      }
+    : null;
+
+  useEffect(() => {
+    if (termsData.length > 0) {
+      setTerms(shuffleArray(termsData));
+    }
+  }, [termsData]);
 
   function shuffleArray(arr: Term[]) {
     const a = [...arr];
@@ -49,25 +43,16 @@ export default function FlashcardsClient() {
     }
     return a;
   }
-  async function toggleStar(term: Term) {
-    try {
-      await fetch(`https://imba-server.up.railway.app/terms/${term.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          isStarred: !term.isStarred,
-        }),
-      });
-
-      setTerms((prev) =>
-        prev.map((w) =>
-          w.id === term.id ? { ...w, isStarred: !w.isStarred } : w
-        )
-      );
-    } catch (err) {
-      console.error("star error", err);
-    }
+  function toggleStar(term: Term) {
+    updateTerm.mutate({
+      id: term.id,
+      data: { isStarred: !term.isStarred },
+    });
+    setTerms((prev) =>
+      prev.map((w) =>
+        w.id === term.id ? { ...w, isStarred: !w.isStarred } : w
+      )
+    );
   }
 
   function getHint(term: string) {
@@ -90,30 +75,6 @@ export default function FlashcardsClient() {
     speechSynthesis.cancel();
     speechSynthesis.speak(utter);
   }
-
-  useEffect(() => {
-    async function loadTerms() {
-      try {
-        const res = await fetch(
-          `https://imba-server.up.railway.app/terms?moduleId=${moduleId}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        alert(JSON.stringify(data.data));
-        console.log("loaded terms:", data.data);
-        if (data.ok && Array.isArray(data.data?.data)) {
-          const shuffled = shuffleArray(data.data.data);
-          setTerms(shuffled);
-        }
-      } catch (err) {
-        console.error("failed to load terms", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (moduleId) loadTerms();
-  }, [moduleId]);
 
   const current = terms[index];
   if (loading) return <p className="text-center mt-20">Loading terms...</p>;

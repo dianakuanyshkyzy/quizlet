@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Edit2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { apiClient } from "@/lib/axios";
+import { toast } from "sonner";
 
 interface UserData {
   id: string;
@@ -49,18 +51,15 @@ export default function ProfileSection({
       const formData = new FormData();
       formData.append("file", file);
 
-      await fetch(
-        "https://imba-server.up.railway.app/users/me/profile-picture",
-        {
-          method: "PATCH",
-          body: formData,
-          credentials: "include",
-        }
-      );
+      await apiClient.patch("/users/me/profile-picture", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
+      toast.success("Profile picture updated");
       window.location.reload();
     } catch (error) {
       console.error("upload error:", error);
+      toast.error("Failed to upload profile picture");
     } finally {
       setUploading(false);
     }
@@ -68,7 +67,7 @@ export default function ProfileSection({
 
   return (
     <Card className="border-0 shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-[#4255ff]/5 to-accent/5 -m-6 p-6 mb-0">
+      <div className="bg-linear-to-r from-[#4255ff]/5 to-accent/5 -m-6 p-6 mb-0">
         <CardHeader className="p-0">
           <div className="flex items-center justify-between">
             <div className="ml-6">
@@ -90,38 +89,38 @@ export default function ProfileSection({
 
       <CardContent className="pt-8 pb-8">
         <div className="flex flex-col items-center mb-8">
-  <Avatar className="h-28 w-28 border border-gray-200">
-    <AvatarImage
-      src={
-        userData.profilePicture
-          ? "https://imba-server.up.railway.app" + userData.profilePicture
-          : undefined
-      }
-      alt={userData.name}
-      crossOrigin="anonymous"
-      className="object-cover"
-    />
-    <AvatarFallback className="text-3xl">
-      {userData.name.charAt(0).toUpperCase() +
-        userData.name.charAt(1).toUpperCase()}
-    </AvatarFallback>
-  </Avatar>
+          <Avatar className="h-28 w-28 border border-gray-200">
+            <AvatarImage
+              src={
+                userData.profilePicture
+                  ? "https://imba-server.up.railway.app" +
+                    userData.profilePicture
+                  : undefined
+              }
+              alt={userData.name}
+              crossOrigin="anonymous"
+              className="object-cover"
+            />
+            <AvatarFallback className="text-3xl">
+              {userData.name.charAt(0).toUpperCase() +
+                userData.name.charAt(1).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
 
-  <input
-    id="profile-upload"
-    type="file"
-    accept="image/*"
-    className="hidden"
-    onChange={handleUpload}
-  />
+          <input
+            id="profile-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleUpload}
+          />
 
-  <Button variant="secondary" size="sm" asChild className="mt-4">
-    <label htmlFor="profile-upload" className="cursor-pointer">
-      {uploading ? "Uploading..." : "Change photo"}
-    </label>
-  </Button>
-</div>
-
+          <Button variant="secondary" size="sm" asChild className="mt-4">
+            <label htmlFor="profile-upload" className="cursor-pointer">
+              {uploading ? "Uploading..." : "Change photo"}
+            </label>
+          </Button>
+        </div>
 
         <div className="grid gap-8 sm:grid-cols-2">
           <div className="space-y-2">
