@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Star, Lightbulb } from "lucide-react";
 import { Volume2 } from "lucide-react";
 import { Term } from "@/lib/types/term.type";
 import { useModule } from "@/lib/hooks/useModules";
 import { useTerms, useUpdateTerm } from "@/lib/hooks/useTerms";
+
+function shuffleArray(arr: Term[]) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export default function FlashcardsClient() {
   const params = useParams();
@@ -20,6 +29,7 @@ export default function FlashcardsClient() {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const initializeRef = useRef(false);
 
   const loading = moduleLoading || termsLoading;
   const moduleInfo = moduleData?.data
@@ -30,19 +40,15 @@ export default function FlashcardsClient() {
     : null;
 
   useEffect(() => {
-    if (termsData.length > 0) {
-      setTerms(shuffleArray(termsData));
+    if (termsData.length > 0 && !initializeRef.current) {
+      initializeRef.current = true;
+      const initialize = () => {
+        setTerms(shuffleArray(termsData));
+      };
+      initialize();
     }
   }, [termsData]);
 
-  function shuffleArray(arr: Term[]) {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
   function toggleStar(term: Term) {
     updateTerm.mutate({
       id: term.id,

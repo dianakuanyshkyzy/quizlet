@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Lightbulb, Star } from "lucide-react";
 import type { Term, TermProgress } from "../types";
@@ -20,7 +20,6 @@ export default function QuizClient() {
   const { data: termsData = [], isLoading: termsLoading } = useTerms(moduleId);
   const updateTerm = useUpdateTerm();
 
-  const [words, setWords] = useState<Term[]>([]);
   const [progressMap, setProgressMap] = useState<
     Record<string, TermProgress["status"]>
   >({});
@@ -30,7 +29,8 @@ export default function QuizClient() {
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [options, setOptions] = useState<string[]>([]);
+  const [shuffledTerms, setShuffledTerms] = useState<Term[]>([]);
+  const initializeRef = useRef(false);
 
   const loading = moduleLoading || termsLoading;
   const moduleInfo = moduleData?.data
@@ -40,40 +40,57 @@ export default function QuizClient() {
       }
     : null;
 
+  // Use shuffledTerms if available, otherwise use original termsData
+  const words = shuffledTerms.length > 0 ? shuffledTerms : termsData;
   const current = words[index];
   const total = words.length;
 
-  useEffect(() => {
-    if (termsData.length > 0) {
-      setWords(termsData);
+  // Derive options from current term instead of setting state
+  const options =
+    current && words.length > 0
+      ? shuffle([
+          current.definition,
+          ...shuffle(words.filter((w: Term) => w.id !== current.id) as Term[])
+            .slice(0, 3)
+            .map((w: Term) => w.definition),
+        ])
+      : [];
 
-      // Load progress for all terms
-      Promise.all(
-        termsData.map(async (term: Term) => {
-          try {
-            const res = await getTermProgress(term.id);
-            return { id: term.id, status: res.data?.status ?? "not_started" };
-          } catch {
-            return { id: term.id, status: "not_started" as const };
-          }
-        })
-      ).then((progressArr) => {
-        const map: Record<string, TermProgress["status"]> = {};
-        progressArr.forEach(({ id, status }) => {
-          map[id] = status;
-        });
-        setProgressMap(map);
-      });
+  useEffect(() => {
+    if (termsData.length > 0 && !initializeRef.current) {
+      initializeRef.current = true;
+      // Don't call setState directly - use a callback
+      const initialize = async () => {
+        setShuffledTerms(shuffle(termsData));
+
+        // Load progress for all terms
+        try {
+          const progressArr = await Promise.all(
+            termsData.map(async (term: Term) => {
+              try {
+                const res = await getTermProgress(term.id);
+                return {
+                  id: term.id,
+                  status: res.data?.status ?? "not_started",
+                };
+              } catch {
+                return { id: term.id, status: "not_started" as const };
+              }
+            })
+          );
+          const map: Record<string, TermProgress["status"]> = {};
+          progressArr.forEach(({ id, status }) => {
+            map[id] = status;
+          });
+          setProgressMap(map);
+        } catch (err) {
+          console.error("Failed to load progress:", err);
+        }
+      };
+
+      initialize();
     }
   }, [termsData]);
-
-  useEffect(() => {
-    if (!current) return;
-    const wrong = shuffle(words.filter((w) => w.id !== current.id))
-      .slice(0, 3)
-      .map((w) => w.definition);
-    setOptions(shuffle([current.definition, ...wrong]));
-  }, [current, words]);
 
   function getNextStatus(current: TermProgress["status"], isCorrect: boolean) {
     const order: TermProgress["status"][] = [
@@ -93,8 +110,8 @@ export default function QuizClient() {
       id: word.id,
       data: { isStarred: !word.isStarred },
     });
-    setWords((prev) =>
-      prev.map((w) =>
+    setShuffledTerms((prev) =>
+      prev.map((w: Term) =>
         w.id === word.id ? { ...w, isStarred: !w.isStarred } : w
       )
     );
@@ -130,8 +147,14 @@ export default function QuizClient() {
 
         // recalc module progress
         // const total = Object.keys(updatedMap).length;
-        const counts = { not_started: 0, in_progress: 0, completed: 0 };
-        Object.values(updatedMap).forEach((status) => counts[status]++);
+        const counts: Record<string, number> = {
+          not_started: 0,
+          in_progress: 0,
+          completed: 0,
+        };
+        Object.values(updatedMap).forEach(
+          (status) => counts[status as string]++
+        );
         // const moduleProgress = {
         //   not_started: counts.not_started / total,
         //   in_progress: counts.in_progress / total,
@@ -169,7 +192,7 @@ export default function QuizClient() {
     setFinished(false);
     setSelected(null);
     setCorrect(null);
-    setWords((prev) => shuffle(prev));
+    setShuffledTerms(shuffle(termsData));
   }
 
   const progressPct = Math.round((index / total) * 100);
