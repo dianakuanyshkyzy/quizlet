@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,80 +10,66 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Eye, EyeOff, Check } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useChangePassword } from "@/lib/hooks/useUser";
-import { toast } from "sonner";
 
-interface PasswordData {
-  oldPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+const passwordSchema = z
+  .object({
+    oldPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(6, "New password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
+type PasswordData = z.infer<typeof passwordSchema>;
 
 export default function PasswordChangeForm() {
-  const [formData, setFormData] = useState<PasswordData>({
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
   const [showPasswords, setShowPasswords] = useState({
     old: false,
     new: false,
     confirm: false,
   });
-  const [errors, setErrors] = useState<Partial<PasswordData>>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const changePassword = useChangePassword();
 
-  const validateForm = () => {
-    const newErrors: Partial<PasswordData> = {};
+  const form = useForm<PasswordData>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
-    if (!formData.oldPassword) {
-      newErrors.oldPassword = "Old password is required";
-    }
-    if (!formData.newPassword) {
-      newErrors.newPassword = "New password is required";
-    }
-    if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-    setIsLoading(true);
+  const handleSubmit = (values: PasswordData) => {
     setSuccess(false);
-
-    changePassword.mutate(
-      {
-        oldPassword: formData.oldPassword,
-        newPassword: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
+    changePassword.mutate(values, {
+      onSuccess: () => {
+        setSuccess(true);
+        form.reset();
+        setTimeout(() => setSuccess(false), 3000);
       },
-      {
-        onSuccess: () => {
-          setSuccess(true);
-          setFormData({
-            oldPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-          });
-          setTimeout(() => setSuccess(false), 3000);
-        },
-        onError: (err: unknown) => {
-          const message = (err as Error).message || "Failed to change password";
-          setErrors({ oldPassword: message });
-          toast.error(message);
-        },
-        onSettled: () => setIsLoading(false),
-      }
-    );
+      onError: (err: unknown) => {
+        const message = (err as Error).message || "Failed to change password";
+        form.setError("root", { message });
+      },
+    });
   };
 
   const togglePasswordVisibility = (field: "old" | "new" | "confirm") => {
@@ -103,137 +87,133 @@ export default function PasswordChangeForm() {
         </CardHeader>
       </div>
       <CardContent className="pt-8 pb-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="text-sm font-medium text-foreground">
-              Current Password
-            </label>
-            <div className="relative mt-2">
-              <Input
-                type={showPasswords.old ? "text" : "password"}
-                value={formData.oldPassword}
-                onChange={(e) => {
-                  setFormData({ ...formData, oldPassword: e.target.value });
-                  if (errors.oldPassword)
-                    setErrors({ ...errors, oldPassword: "" });
-                }}
-                placeholder="Enter your current password"
-                className={`pr-10 border-border focus:border-primary ${
-                  errors.oldPassword ? "border-destructive" : ""
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("old")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPasswords.old ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {errors.oldPassword && (
-              <p className="mt-1 text-sm text-destructive">
-                {errors.oldPassword}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
+            <FormField
+              control={form.control}
+              name="oldPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Password</FormLabel>
+                  <FormControl>
+                    <div className="relative mt-2">
+                      <Input
+                        type={showPasswords.old ? "text" : "password"}
+                        placeholder="Enter your current password"
+                        className="pr-10 border-border focus:border-primary"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("old")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPasswords.old ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="newPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New Password</FormLabel>
+                  <FormControl>
+                    <div className="relative mt-2">
+                      <Input
+                        type={showPasswords.new ? "text" : "password"}
+                        placeholder="Enter your new password"
+                        className="pr-10 border-border focus:border-primary"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("new")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPasswords.new ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <div className="relative mt-2">
+                      <Input
+                        type={showPasswords.confirm ? "text" : "password"}
+                        placeholder="Confirm your new password"
+                        className="pr-10 border-border focus:border-primary"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("confirm")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPasswords.confirm ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.formState.errors.root?.message && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.root.message}
               </p>
             )}
-          </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground">
-              New Password
-            </label>
-            <div className="relative mt-2">
-              <Input
-                type={showPasswords.new ? "text" : "password"}
-                value={formData.newPassword}
-                onChange={(e) => {
-                  setFormData({ ...formData, newPassword: e.target.value });
-                  if (errors.newPassword)
-                    setErrors({ ...errors, newPassword: "" });
-                }}
-                placeholder="Enter your new password"
-                className={`pr-10 border-border focus:border-primary ${
-                  errors.newPassword ? "border-destructive" : ""
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("new")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPasswords.new ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {errors.newPassword && (
-              <p className="mt-1 text-sm text-destructive">
-                {errors.newPassword}
-              </p>
+            {success && (
+              <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700">
+                <Check className="h-5 w-5" />
+                <span className="text-sm font-medium">
+                  Password changed successfully!
+                </span>
+              </div>
             )}
-          </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground">
-              Confirm Password
-            </label>
-            <div className="relative mt-2">
-              <Input
-                type={showPasswords.confirm ? "text" : "password"}
-                value={formData.confirmPassword}
-                onChange={(e) => {
-                  setFormData({ ...formData, confirmPassword: e.target.value });
-                  if (errors.confirmPassword)
-                    setErrors({ ...errors, confirmPassword: "" });
-                }}
-                placeholder="Confirm your new password"
-                className={`pr-10 border-border focus:border-primary ${
-                  errors.confirmPassword ? "border-destructive" : ""
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("confirm")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            <div className="pt-6">
+              <Button
+                type="submit"
+                disabled={changePassword.isPending}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {showPasswords.confirm ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+                {changePassword.isPending ? "Updating..." : "Update Password"}
+              </Button>
             </div>
-            {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-destructive">
-                {errors.confirmPassword}
-              </p>
-            )}
-          </div>
-
-          {success && (
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-700">
-              <Check className="h-5 w-5" />
-              <span className="text-sm font-medium">
-                Password changed successfully!
-              </span>
-            </div>
-          )}
-
-          <div className="pt-6">
-            <Button
-              type="submit"
-              disabled={isLoading || success}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isLoading ? "Updating..." : "Update Password"}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
