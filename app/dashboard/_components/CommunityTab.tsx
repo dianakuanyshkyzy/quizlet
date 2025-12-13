@@ -1,24 +1,39 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { CommunityModule as CommunityModuleType } from "@/lib/api";
 import { useState } from "react";
+import { useCommunityModules } from "@/lib/hooks/useModules";
+import { toast } from "sonner";
+import { CommunityLoading } from "./CommunitySkeleton";
 
-type Props = {
-  communityModules: CommunityModuleType[];
-  onSearch: (q: string) => void;
-  onViewModule: (id: string) => void;
-};
-
-export default function CommunityTab({
-  communityModules,
-  onSearch,
-  onViewModule,
-}: Props) {
+export default function CommunityTab() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
+
+  const {
+    data: communityModules = [],
+    isLoading,
+    isError,
+  } = useCommunityModules(searchQuery);
+
+  const handleSearch = () => {
+    setSearchQuery(inputValue);
+  };
+
+  if (isLoading) {
+    return <CommunityLoading />;
+  }
+
+  if (isError) {
+    toast.error("Failed to load community modules");
+  }
+
   return (
     <main>
       <div>
@@ -36,7 +51,7 @@ export default function CommunityTab({
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              onSearch(inputValue);
+              handleSearch();
             }
           }}
         >
@@ -47,11 +62,7 @@ export default function CommunityTab({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <Button
-            type="submit"
-            variant="default"
-            onClick={() => onSearch(inputValue)}
-          >
+          <Button type="submit" variant="default" onClick={handleSearch}>
             Search
           </Button>
         </div>
@@ -100,7 +111,7 @@ export default function CommunityTab({
                     <Button
                       size="sm"
                       className="mt-4"
-                      onClick={() => onViewModule(m.id)}
+                      onClick={() => router.push(`/modules/${m.id}`)}
                     >
                       View Module
                     </Button>

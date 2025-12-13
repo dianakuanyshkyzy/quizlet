@@ -1,44 +1,68 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import ModuleCard from "@/components/ModuleCard";
 import ModuleListItem from "@/components/ModuleListItem";
 import AddModuleModal from "@/components/AddModuleModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Module as ModuleType } from "@/lib/api";
+import {
+  useModules,
+  useDeleteModule,
+  useUpdateModule,
+} from "@/lib/hooks/useModules";
+import { toast } from "sonner";
+import { DashboardLoading } from "./DashboardSkeleton";
 
-type Props = {
-  recentModules: ModuleType[];
-  filteredModules: ModuleType[];
-  searchQuery: string;
-  setSearchQuery: (v: string) => void;
-  showModal: boolean;
-  setShowModal: (v: boolean) => void;
-  onModuleClick: (m: ModuleType) => void;
-  onDelete: (id: string) => void;
-  onUpdate: (
+export default function DashboardTab() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  // Queries
+  const { data: modules = [], isLoading, isError } = useModules();
+
+  // Mutations
+  const deleteModule = useDeleteModule();
+  const updateModule = useUpdateModule();
+
+  const handleDeleteModule = (id: string) => {
+    deleteModule.mutate(id);
+  };
+
+  const handleUpdateModule = (
     id: string,
     data: { title: string; description: string; isPrivate: boolean }
-  ) => void;
-};
+  ) => {
+    updateModule.mutate({ id, data });
+  };
 
-export default function DashboardTab({
-  recentModules,
-  filteredModules,
-  searchQuery,
-  setSearchQuery,
-  showModal,
-  setShowModal,
-  onModuleClick,
-  onDelete,
-  onUpdate,
-}: Props) {
+  const handleModuleClick = (m: ModuleType) => {
+    router.push(`/modules/${m.id}`);
+  };
+
+  if (isLoading) {
+    return <DashboardLoading />;
+  }
+
+  if (isError) {
+    toast.error("Failed to load modules");
+  }
+
+  const filteredModules = modules.filter((m: ModuleType) =>
+    m.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const recentModules = modules.slice(0, 4);
+
   return (
     <main>
       <h2 className="text-2xl text-[#4255FF] font-bold mb-4">Recent Modules</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {recentModules.map((m: ModuleType) => (
-          <ModuleCard key={m.id} module={m} onClick={onModuleClick} />
+          <ModuleCard key={m.id} module={m} onClick={handleModuleClick} />
         ))}
       </div>
 
@@ -68,9 +92,9 @@ export default function DashboardTab({
           <ModuleListItem
             key={m.id}
             module={m}
-            onClick={onModuleClick}
-            onDelete={onDelete}
-            onUpdate={onUpdate}
+            onClick={handleModuleClick}
+            onDelete={handleDeleteModule}
+            onUpdate={handleUpdateModule}
           />
         ))}
       </div>
