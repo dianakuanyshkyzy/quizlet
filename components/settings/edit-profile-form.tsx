@@ -20,20 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { User } from "@/lib/hooks/useUser";
 
 interface EditProfileFormProps {
-  userData: UserData;
-  onSubmit: (data: Partial<UserData>) => void;
+  userData: User;
+  onSubmit: (data: Partial<User>) => void;
   onCancel: () => void;
 }
 

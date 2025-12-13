@@ -129,17 +129,17 @@ export default function QuizClient() {
         const updatedMap = { ...prev, [termId]: newStatus };
 
         // recalc module progress
-        const total = Object.keys(updatedMap).length;
+        // const total = Object.keys(updatedMap).length;
         const counts = { not_started: 0, in_progress: 0, completed: 0 };
         Object.values(updatedMap).forEach((status) => counts[status]++);
-        const moduleProgress = {
-          not_started: counts.not_started / total,
-          in_progress: counts.in_progress / total,
-          completed: counts.completed / total,
-          completedTerms: counts.completed,
-        };
+        // const moduleProgress = {
+        //   not_started: counts.not_started / total,
+        //   in_progress: counts.in_progress / total,
+        //   completed: counts.completed / total,
+        //   completedTerms: counts.completed,
+        // };
 
-        // Progress tracking is managed elsewhere
+        // // Progress tracking is managed elsewhere
 
         return updatedMap;
       });

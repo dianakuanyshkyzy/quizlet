@@ -1,6 +1,4 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -10,7 +8,7 @@ import TermItem from "./_components/TermItem";
 import AddTerm from "./_components/AddTerm";
 import { Button } from "@/components/ui/button";
 import ModuleHeader from "./_components/ModuleHeader";
-import type { ApiTerm, ModuleResponse, Term } from "./types";
+import type { Term } from "./types";
 import { useModule } from "@/lib/hooks/useModules";
 import {
   useTerms,
@@ -199,7 +197,7 @@ export default function LearnPageClient({ id }: { id: string }) {
           <>
             <h3 className="text-2xl font-semibold mb-4">Terms</h3>
             <div className="space-y-3">
-              {terms.map((t) => (
+              {terms.map((t: Term) => (
                 <TermItem
                   isOwned={!!moduleData?.data?.isOwner}
                   isCollected={!!moduleData?.data?.isCollected}

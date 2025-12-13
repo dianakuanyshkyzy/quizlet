@@ -1,6 +1,4 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -9,25 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "./ui/skeleton";
 import { useMe } from "@/lib/hooks/useUser";
 
-interface UserData {
-  data: {
-    id: string;
-    name: string;
-    email: string;
-    profilePicture?: string;
-  };
-}
-
 export default function Header() {
-  const [user, setUser] = useState<UserData | null>(null);
   const { isAuthenticated, isLoading, logout } = useAuth();
   const { data: me } = useMe();
-
-  useEffect(() => {
-    if (me) {
-      setUser({ data: me } as unknown as UserData);
-    }
-  }, [me]);
 
   const getInitials = (name: string) => {
     return name
@@ -56,14 +38,13 @@ export default function Header() {
               <Avatar className="size-12 border border-gray-100">
                 <AvatarImage
                   src={
-                    "https://imba-server.up.railway.app" +
-                    user?.data.profilePicture
+                    "https://imba-server.up.railway.app" + me?.profilePicture
                   }
-                  alt={user?.data.name}
+                  alt={me?.name}
                   crossOrigin="anonymous"
                 />
                 <AvatarFallback>
-                  {user ? getInitials(user.data.name) : "U"}
+                  {me ? getInitials(me.name) : "U"}
                 </AvatarFallback>
               </Avatar>
             )}

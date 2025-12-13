@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import type { Term } from "@/lib/types/term.type";
-import type { ModuleInfo } from "../types";
 import { useModule } from "@/lib/hooks/useModules";
 import { useTerms } from "@/lib/hooks/useTerms";
 

@@ -14,20 +14,10 @@ import { Edit2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { apiClient } from "@/lib/axios";
 import { toast } from "sonner";
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-  profilePicture?: string; // <–– добавлено
-}
+import { User } from "@/lib/hooks/useUser";
 
 interface ProfileSectionProps {
-  userData: UserData;
+  userData: User;
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
 }

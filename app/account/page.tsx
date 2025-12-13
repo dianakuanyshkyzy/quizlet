@@ -7,48 +7,32 @@ import DeleteAccountSection from "@/components/settings/delete-account-section";
 import PasswordChangeForm from "@/components/settings/password-change-form";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMe, useUpdateMe } from "@/lib/hooks/useUser";
+import { useMe, useUpdateMe, User } from "@/lib/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
-type UserData = {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export default function AccountPage() {
-  const [userData, setUserData] = useState(null);
   const { data: me, isLoading: meLoading } = useMe();
   const updateMe = useUpdateMe();
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
 
-  useEffect(() => {
-    if (me) setUserData(me as any);
-  }, [me]);
-
-  const handleUpdate = async (updatedFields: Partial<UserData>) => {
+  const handleUpdate = async (updatedFields: Partial<User>) => {
     updateMe.mutate(updatedFields, {
-      onSuccess: (user) => {
-        setUserData(user as any);
+      onSuccess: () => {
         setIsEditing(false);
       },
     });
   };
   useEffect(() => {
-    if (!meLoading && !userData) {
+    if (!meLoading && !me) {
       router.push("/login");
     }
-  }, [meLoading, router, userData]);
+  }, [meLoading, router, me]);
 
   if (meLoading) return <p className="p-8">loading…</p>;
-  if (!userData) return null;
+  if (!me) return null;
 
   return (
     <>
@@ -74,16 +58,16 @@ export default function AccountPage() {
           </div>
           <div className="space-y-6">
             {!isEditing
-              ? userData && (
+              ? me && (
                   <ProfileSection
-                    userData={userData}
+                    userData={me}
                     isEditing={isEditing}
                     setIsEditing={setIsEditing}
                   />
                 )
-              : userData && (
+              : me && (
                   <EditProfileForm
-                    userData={userData}
+                    userData={me}
                     onSubmit={handleUpdate}
                     onCancel={() => setIsEditing(false)}
                   />
