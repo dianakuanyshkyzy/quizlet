@@ -1,30 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProfileSection from "@/components/settings/profile-section";
-import EditProfileForm from "@/components/settings/edit-profile-form";
-import DeleteAccountSection from "@/components/settings/delete-account-section";
-import PasswordChangeForm from "@/components/settings/password-change-form";
+import ProfileSection from "@/app/account/_components/profile-section";
+import EditProfileForm from "@/app/account/_components/edit-profile-form";
+import PasswordChangeForm from "@/app/account/_components/password-change-form";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMe, useUpdateMe, User } from "@/lib/hooks/useUser";
+import { useMe } from "@/lib/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
 export default function AccountPage() {
   const { data: me, isLoading: meLoading } = useMe();
-  const updateMe = useUpdateMe();
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
-
-  const handleUpdate = async (updatedFields: Partial<User>) => {
-    updateMe.mutate(updatedFields, {
-      onSuccess: () => {
-        setIsEditing(false);
-      },
-    });
-  };
   useEffect(() => {
     if (!meLoading && !me) {
       router.push("/login");
@@ -47,6 +37,7 @@ export default function AccountPage() {
                 Manage your account information and preferences
               </p>
             </div>
+
             <Button
               onClick={logout}
               variant="outline"
@@ -56,6 +47,7 @@ export default function AccountPage() {
               Logout
             </Button>
           </div>
+
           <div className="space-y-6">
             {!isEditing
               ? me && (
@@ -68,12 +60,12 @@ export default function AccountPage() {
               : me && (
                   <EditProfileForm
                     userData={me}
-                    onSubmit={handleUpdate}
                     onCancel={() => setIsEditing(false)}
+                    onSuccess={() => setIsEditing(false)}
                   />
                 )}
+
             <PasswordChangeForm />
-            <DeleteAccountSection />
           </div>
         </div>
       </main>
