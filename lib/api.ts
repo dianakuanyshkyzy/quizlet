@@ -114,6 +114,32 @@ export async function deleteModule(id: string) {
   }
 }
 
+export async function collectModule(id: string) {
+  try {
+    const { data } = await apiClient.post(`/v2/modules/${id}/collect`);
+    if (!data.ok) throw new Error(data.message || "Failed to collect module");
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    throw new Error(
+      axiosError.response?.data?.message || "Failed to collect module"
+    );
+  }
+}
+
+export async function uncollectModule(id: string) {
+  try {
+    const { data } = await apiClient.post(`/v2/modules/${id}/uncollect`);
+    if (!data.ok) throw new Error(data.message || "Failed to uncollect module");
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    throw new Error(
+      axiosError.response?.data?.message || "Failed to uncollect module"
+    );
+  }
+}
+
 // ============================================
 // TERMS API
 // ============================================

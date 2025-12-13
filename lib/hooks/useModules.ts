@@ -7,6 +7,8 @@ import {
   createModule,
   updateModule,
   deleteModule,
+  collectModule,
+  uncollectModule,
   CreateModuleData,
   UpdateModuleData,
 } from "@/lib/api";
@@ -121,6 +123,38 @@ export function useDeleteModule() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: moduleKeys.lists() });
+    },
+  });
+}
+
+export function useCollectModule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => collectModule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: moduleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: moduleKeys.detail(id) });
+      toast.success("Module added to collection");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to collect module");
+    },
+  });
+}
+
+export function useUncollectModule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => uncollectModule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: moduleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: moduleKeys.detail(id) });
+      toast.success("Module removed from collection");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to uncollect module");
     },
   });
 }

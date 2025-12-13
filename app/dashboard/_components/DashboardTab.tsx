@@ -12,6 +12,7 @@ import {
   useModules,
   useDeleteModule,
   useUpdateModule,
+  useUncollectModule,
 } from "@/lib/hooks/useModules";
 import { toast } from "sonner";
 import { DashboardLoading } from "./DashboardSkeleton";
@@ -27,9 +28,14 @@ export default function DashboardTab() {
   // Mutations
   const deleteModule = useDeleteModule();
   const updateModule = useUpdateModule();
+  const uncollectModule = useUncollectModule();
 
-  const handleDeleteModule = (id: string) => {
-    deleteModule.mutate(id);
+  const handleDeleteModule = (module: ModuleType) => {
+    if (module.isOwner) {
+      deleteModule.mutate(module.id);
+      return;
+    }
+    uncollectModule.mutate(module.id);
   };
 
   const handleUpdateModule = (

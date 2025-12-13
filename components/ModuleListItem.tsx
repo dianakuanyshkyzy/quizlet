@@ -26,7 +26,7 @@ type Module = {
 type ModuleListItemProps = {
   module: Module;
   onClick: (module: Module) => void;
-  onDelete: (id: string) => void;
+  onDelete: (module: Module) => void;
   onUpdate: (
     id: string,
     data: { title: string; description: string; isPrivate: boolean }
@@ -57,27 +57,27 @@ export default function ModuleListItem({
           {module.title}
         </div>
         <div className="flex items-center gap-4">
-        {module.isOwner && (
-          <div className="">
-            <Edit2
-              className="text-gray-500 cursor-pointer hover:scale-110 transition"
-              size={20}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditing(true);
-              }}
-            />
-          </div>
-        )}
-        <Trash2
-              className="text-gray-500 cursor-pointer hover:scale-110 transition"
-              size={20}
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirming(true);
-              }}
-            />
-      </div>
+          {module.isOwner && (
+            <div className="">
+              <Edit2
+                className="text-gray-500 cursor-pointer hover:scale-110 transition"
+                size={20}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditing(true);
+                }}
+              />
+            </div>
+          )}
+          <Trash2
+            className="text-gray-500 cursor-pointer hover:scale-110 transition"
+            size={20}
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirming(true);
+            }}
+          />
+        </div>
       </div>
 
       <Dialog open={confirming} onOpenChange={setConfirming}>
@@ -94,7 +94,7 @@ export default function ModuleListItem({
             <Button
               variant="destructive"
               onClick={() => {
-                onDelete(module.id);
+                onDelete(module);
                 setConfirming(false);
               }}
             >
