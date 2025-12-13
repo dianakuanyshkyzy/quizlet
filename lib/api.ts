@@ -47,9 +47,11 @@ export async function getModules() {
   }
 }
 
-export async function getCommunityModules() {
+export async function getCommunityModules(q?: string) {
   try {
-    const { data } = await apiClient.get("/v2/modules/public");
+    const { data } = await apiClient.get("/v2/modules/public", {
+      params: q ? { q } : undefined,
+    });
     if (!data.ok)
       throw new Error(data.message || "Failed to fetch community modules");
     return data.data as CommunityModule[];

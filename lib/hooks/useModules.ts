@@ -36,10 +36,10 @@ export function useModules() {
   });
 }
 
-export function useCommunityModules() {
+export function useCommunityModules(q?: string) {
   return useQuery({
-    queryKey: moduleKeys.community(),
-    queryFn: getCommunityModules,
+    queryKey: [...moduleKeys.community(), { q }],
+    queryFn: () => getCommunityModules(q),
   });
 }
 

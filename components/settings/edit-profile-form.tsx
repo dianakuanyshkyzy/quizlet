@@ -96,27 +96,6 @@ export default function EditProfileForm({
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground">
-              Status
-            </label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) =>
-                setFormData({ ...formData, status: value })
-              }
-            >
-              <SelectTrigger className="mt-2 border-border focus:border-primary">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-                <SelectItem value="Away">Away</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="flex gap-3 pt-4">
             <Button
               type="submit"
