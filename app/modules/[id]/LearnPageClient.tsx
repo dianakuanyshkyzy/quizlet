@@ -11,7 +11,6 @@ import ModuleHeader from "./_components/ModuleHeader";
 import type { Term } from "./types";
 import { useModule } from "@/lib/hooks/useModules";
 import {
-  useTerms,
   useCreateTerm,
   useUpdateTerm,
   useDeleteTerm,
@@ -20,12 +19,12 @@ import { toast } from "sonner";
 
 export default function LearnPageClient({ id }: { id: string }) {
   const { data: moduleData, isLoading: moduleLoading } = useModule(id);
-  const { data: terms = [], isLoading: termsLoading } = useTerms(id);
+  // const { data: terms = [], isLoading: termsLoading } = useTerms(id);
   const createTerm = useCreateTerm();
   const updateTerm = useUpdateTerm();
   const deleteTerm = useDeleteTerm();
 
-  const loading = moduleLoading || termsLoading;
+  const loading = moduleLoading;
 
   function toggleStar(term: Term) {
     updateTerm.mutate({
@@ -117,9 +116,7 @@ export default function LearnPageClient({ id }: { id: string }) {
           </div>
         )}
       </div>
-
       <hr className="w-full max-w-4xl mb-8 border-gray-300" />
-
       {loading ? (
         <div className="w-full max-w-4xl space-y-4 flex flex-col items-center">
           <Skeleton className="w-1/4 h-10 bg-gray-200 mb-3" />
@@ -184,7 +181,6 @@ export default function LearnPageClient({ id }: { id: string }) {
           </CardContent>
         </Card>
       )}
-
       <div className="w-full max-w-4xl mt-10">
         {loading ? (
           <div>
@@ -195,9 +191,11 @@ export default function LearnPageClient({ id }: { id: string }) {
           </div>
         ) : (
           <>
-            <h3 className="text-2xl font-semibold mb-4">Terms</h3>
+            <h3 className="text-2xl font-semibold mb-4 text-[#4255FF]">
+              Terms
+            </h3>
             <div className="space-y-3">
-              {terms.map((t: Term) => (
+              {moduleInfo.terms.map((t: Term) => (
                 <TermItem
                   isOwned={!!moduleData?.data?.isOwner}
                   isCollected={!!moduleData?.data?.isCollected}
@@ -214,7 +212,6 @@ export default function LearnPageClient({ id }: { id: string }) {
 
         {moduleInfo?.isOwner && <AddTerm onSubmit={submitNewTerm} />}
       </div>
-
       <Link href="/dashboard" className="mt-10">
         <span className="flex items-center gap-x-2 hover:underline underline-offset-4 hover:text-[#4255FF] transition">
           <ArrowLeft size={20} /> Back to dashboard

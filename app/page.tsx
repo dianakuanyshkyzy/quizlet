@@ -39,7 +39,7 @@ export default function Dashboard() {
         ].map((item, idx) => (
           <div
             key={idx}
-            className="relative rounded-2xl overflow-hidden shadow-md aspect-[4/3] cursor-pointer transform transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+            className="relative rounded-2xl overflow-hidden shadow-md aspect-4/3 cursor-pointer transform transition-transform duration-300 hover:scale-105 hover:shadow-xl"
             style={{
               backgroundColor: item.bg,
               height: "300px",

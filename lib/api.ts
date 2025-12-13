@@ -245,3 +245,18 @@ export async function updateTermProgress(
     );
   }
 }
+
+export async function updateTermStatus(id: string, success: boolean) {
+  try {
+    // TODO: change to PATCH method on backend
+    const { data } = await apiClient.post(`/v2/terms/${id}/update-status`, {
+      success,
+    });
+    return data;
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    throw new Error(
+      axiosError.response?.data?.message || "Failed to update term progress"
+    );
+  }
+}

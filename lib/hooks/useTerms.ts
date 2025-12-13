@@ -9,6 +9,7 @@ import {
   CreateTermData,
   UpdateTermData,
   Term,
+  updateTermStatus,
 } from "@/lib/api";
 import { toast } from "sonner";
 import { TermProgress } from "@/app/modules/[id]/types";
@@ -205,6 +206,23 @@ export function useUpdateTermProgress() {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update progress");
+    },
+  });
+}
+
+export function useUpdateTermStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, success }: { id: string; success: boolean }) =>
+      updateTermStatus(id, success),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: termKeys.progress(variables.id),
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update term status");
     },
   });
 }
