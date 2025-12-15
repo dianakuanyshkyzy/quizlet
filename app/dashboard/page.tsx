@@ -26,7 +26,7 @@ export default function MainPage() {
         <TabsContent value="dashboard" className="w-full max-w-[860px] mx-auto">
           <DashboardTab />
         </TabsContent>
-        <TabsContent value="community" className="min-w-[1260px] mx-auto">
+        <TabsContent value="community" className="w-full max-w-[860px] mx-auto">
           <CommunityTab />
         </TabsContent>
       </Tabs>
