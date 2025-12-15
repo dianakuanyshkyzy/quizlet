@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { toast } from "sonner";
 import { TermProgress } from "@/app/modules/[id]/types";
+import { moduleKeys } from "./useModules";
 
 // ============================================
 // QUERY KEYS
@@ -188,21 +189,26 @@ export function useDeleteTerm() {
   });
 }
 
-export function useUpdateTermProgress() {
+export function useUpdateTermProgress(moduleId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       id,
-      status,
+      data,
     }: {
       id: string;
-      status: TermProgress["status"];
-    }) => updateTermProgress(id, status),
+      data: { status?: TermProgress["status"]; isStarred?: boolean };
+    }) => updateTermProgress(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: termKeys.progress(variables.id),
-      });
+      if (moduleId) {
+        queryClient.invalidateQueries({
+          queryKey: termKeys.progress(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: moduleKeys.detail(moduleId),
+        });
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update progress");

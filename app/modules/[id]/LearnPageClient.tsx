@@ -20,19 +20,26 @@ import { toast } from "sonner";
 
 export default function LearnPageClient({ id }: { id: string }) {
   const { data: moduleData, isLoading: moduleLoading } = useModule(id);
-  // const { data: terms = [], isLoading: termsLoading } = useTerms(id);
   const createTerm = useCreateTerm();
   const updateTerm = useUpdateTerm();
   const deleteTerm = useDeleteTerm();
-  const updateTermProgress = useUpdateTermProgress();
+  const updateTermProgress = useUpdateTermProgress(id);
 
   const loading = moduleLoading;
 
-  function toggleStar(term: Term) {
-    updateTerm.mutate({
-      id: term.id,
-      data: { isStarred: !term.isStarred },
-    });
+  async function toggleStar(term: Term) {
+    try {
+      await updateTermProgress.mutateAsync({
+        id: term.id,
+        data: {
+          isStarred: !term.isStarred,
+        },
+      });
+      // window.location.reload();
+    } catch (error) {
+      console.error("toggle star error", error);
+      toast.error("Failed to toggle star");
+    }
   }
 
   function submitNewTerm(term: string, definition: string) {
@@ -90,7 +97,7 @@ export default function LearnPageClient({ id }: { id: string }) {
       const resetPromises = moduleInfo.terms.map((term: Term) =>
         updateTermProgress.mutateAsync({
           id: term.id,
-          status: "not_started",
+          data: { status: "not_started" },
         })
       );
 

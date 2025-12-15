@@ -231,12 +231,14 @@ export async function getTermProgress(id: string) {
 
 export async function updateTermProgress(
   id: string,
-  status: TermProgress["status"]
+  termData: { status?: TermProgress["status"]; isStarred?: boolean }
 ) {
   try {
     const { data } = await apiClient.patch(`/v2/terms/${id}/progress`, {
-      status,
+      status: termData.status,
+      isStarred: termData.isStarred,
     });
+
     return data;
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>;
