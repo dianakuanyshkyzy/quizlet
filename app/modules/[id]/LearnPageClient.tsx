@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,7 @@ import {
   useCreateTerm,
   useUpdateTerm,
   useDeleteTerm,
+  useUpdateTermProgress,
 } from "@/lib/hooks/useTerms";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ export default function LearnPageClient({ id }: { id: string }) {
   const createTerm = useCreateTerm();
   const updateTerm = useUpdateTerm();
   const deleteTerm = useDeleteTerm();
+  const updateTermProgress = useUpdateTermProgress();
 
   const loading = moduleLoading;
 
@@ -78,6 +80,30 @@ export default function LearnPageClient({ id }: { id: string }) {
     }
   }
 
+  async function handleResetProgress() {
+    if (!moduleInfo?.terms || moduleInfo.terms.length === 0) {
+      toast.error("No terms to reset");
+      return;
+    }
+
+    try {
+      const resetPromises = moduleInfo.terms.map((term: Term) =>
+        updateTermProgress.mutateAsync({
+          id: term.id,
+          status: "not_started",
+        })
+      );
+
+      await Promise.all(resetPromises);
+      toast.success("Progress reset successfully!");
+      // Refetch the module data to update progress bar
+      window.location.reload();
+    } catch (err) {
+      console.error("reset progress error", err);
+      toast.error("Failed to reset progress");
+    }
+  }
+
   const moduleInfo = moduleData?.data;
   const error = null; // Remove old error state since queries handle errors
 
@@ -109,7 +135,11 @@ export default function LearnPageClient({ id }: { id: string }) {
         ) : error ? (
           <div className="p-6 bg-red-50 text-red-700 rounded-2xl">{error}</div>
         ) : moduleInfo ? (
-          <ModuleHeader module={moduleInfo} />
+          <ModuleHeader
+            module={moduleInfo}
+            // onResetProgress={handleResetProgress}
+            // isCollected={!!moduleInfo.isCollected}
+          />
         ) : (
           <div className="p-6 bg-yellow-50 text-yellow-800 rounded-2xl">
             Module not found
@@ -117,6 +147,7 @@ export default function LearnPageClient({ id }: { id: string }) {
         )}
       </div>
       <hr className="w-full max-w-4xl mb-8 border-gray-300" />
+
       {loading ? (
         <div className="w-full max-w-4xl space-y-4 flex flex-col items-center">
           <Skeleton className="w-1/4 h-10 bg-gray-200 mb-3" />
@@ -191,9 +222,23 @@ export default function LearnPageClient({ id }: { id: string }) {
           </div>
         ) : (
           <>
-            <h3 className="text-2xl font-semibold mb-4 text-[#4255FF]">
-              Terms
-            </h3>
+            <div className="flex justify-between items-center mb-4 ">
+              <h3 className="text-2xl font-semibold text-[#4255FF]">Terms</h3>
+              {moduleInfo?.isCollected &&
+                moduleInfo.progress &&
+                moduleInfo.termsCount > 0 &&
+                handleResetProgress && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetProgress}
+                    className="flex items-center gap-2"
+                  >
+                    <RotateCcw size={16} />
+                    Reset Progress
+                  </Button>
+                )}
+            </div>
             <div className="space-y-3">
               {moduleInfo.terms.map((t: Term) => (
                 <TermItem

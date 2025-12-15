@@ -15,7 +15,7 @@ export default function MainPage() {
   };
 
   return (
-    <div className="p-8 min-h-screen">
+    <div className="p-8 min-h-screen mb-10">
       <Tabs value={currentTab} onValueChange={handleTabChange}>
         <div className="flex justify-center mb-2">
           <TabsList>

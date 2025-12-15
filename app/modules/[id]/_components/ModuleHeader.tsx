@@ -1,18 +1,44 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Button } from "@/components/ui/button";
+// import { RotateCcw } from "lucide-react";
 import type { ModuleInfo } from "../types";
 
 type ModuleHeaderProps = {
   module: ModuleInfo;
+  // onResetProgress?: () => void;
+  // isCollected?: boolean;
 };
 
-export default function ModuleHeader({ module }: ModuleHeaderProps) {
+export default function ModuleHeader({
+  module,
+}: // onResetProgress,
+// isCollected,
+ModuleHeaderProps) {
   return (
     <div>
-      <div className="rounded-2xl flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl font-bold text-[#4255FF]">{module.title}</h1>
+      <div className="rounded-2xl flex justify-between items-start">
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-4xl font-bold text-[#4255FF]">
+              {module.title}
+            </h1>
+            {/* {isCollected &&
+              module.progress &&
+              module.termsCount > 0 &&
+              onResetProgress && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onResetProgress}
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw size={16} />
+                  Reset Progress
+                </Button>
+              )} */}
+          </div>
           <p className="my-4 text-gray-600">{module.description}</p>
           <div>
             <span className="bg-gray-200 text-gray-500 p-1 px-3 text-sm rounded-full">
