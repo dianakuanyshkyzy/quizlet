@@ -39,7 +39,8 @@ export default function QuizClient() {
   const moduleId = params.id as string;
 
   const { data: moduleData, isLoading: moduleLoading } = useModule(moduleId);
-  const { data: termsData = [], isLoading: termsLoading } = useTerms(moduleId);
+  // const { data: termsData = [], isLoading: termsLoading } = useTerms(moduleId);
+  const termsData = useMemo(() => moduleData?.data.terms || [], [moduleData]);
   const updateTerm = useUpdateTerm();
   const updateTermStatus = useUpdateTermStatus();
 
@@ -50,10 +51,11 @@ export default function QuizClient() {
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswer[]>([]);
   const [isFinished, setIsFinished] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [showOnlyStarred, setShowOnlyStarred] = useState(false);
   const hasSubmittedRef = useRef(false);
   const [, startTransition] = useTransition();
 
-  const loading = moduleLoading || termsLoading;
+  const loading = moduleLoading;
 
   const moduleInfo = useMemo(
     () =>
@@ -66,14 +68,24 @@ export default function QuizClient() {
     [moduleData]
   );
 
-  // Initialize quiz terms once when data loads
+  // Initialize quiz terms once when data loads or filter changes
   useEffect(() => {
-    if (termsData.length > 0 && quizTerms.length === 0) {
+    if (termsData.length > 0) {
       startTransition(() => {
-        setQuizTerms(shuffleArray(termsData));
+        const filteredData = showOnlyStarred
+          ? termsData.filter((term: Term) => term.isStarred)
+          : termsData;
+        setQuizTerms(shuffleArray(filteredData));
+        setCurrentIndex(0);
+        setSelectedAnswer(null);
+        setIsAnswerCorrect(null);
+        setQuizAnswers([]);
+        setIsFinished(false);
+        setShowHint(false);
+        hasSubmittedRef.current = false;
       });
     }
-  }, [termsData, quizTerms.length, startTransition]);
+  }, [termsData, showOnlyStarred, startTransition]);
 
   const currentTerm = quizTerms[currentIndex];
   const totalQuestions = quizTerms.length;
@@ -153,7 +165,10 @@ export default function QuizClient() {
   }, [isFinished, quizAnswers, updateTermStatus]);
 
   const handleRetry = useCallback(() => {
-    setQuizTerms(shuffleArray(termsData));
+    const filteredData = showOnlyStarred
+      ? termsData.filter((term: Term) => term.isStarred)
+      : termsData;
+    setQuizTerms(shuffleArray(filteredData));
     setCurrentIndex(0);
     setSelectedAnswer(null);
     setIsAnswerCorrect(null);
@@ -161,7 +176,7 @@ export default function QuizClient() {
     setIsFinished(false);
     setShowHint(false);
     hasSubmittedRef.current = false; // Reset submission flag
-  }, [termsData]);
+  }, [termsData, showOnlyStarred]);
 
   const getHint = useCallback((text: string) => {
     const words = text.trim().split(" ");
@@ -181,7 +196,13 @@ export default function QuizClient() {
   }
 
   if (!currentTerm || quizTerms.length === 0) {
-    return <p className="text-center mt-20">No terms available for quiz</p>;
+    return (
+      <p className="text-center mt-20">
+        {showOnlyStarred
+          ? "No starred terms available for quiz"
+          : "No terms available for quiz"}
+      </p>
+    );
   }
 
   return (
@@ -194,6 +215,18 @@ export default function QuizClient() {
       )}
 
       <div className="flex flex-col items-center min-h-screen p-6">
+        {/* Filter Button */}
+        <div className="w-full max-w-4xl mb-6 flex justify-end">
+          <Button
+            variant={showOnlyStarred ? "default" : "outline"}
+            onClick={() => setShowOnlyStarred(!showOnlyStarred)}
+            className="flex items-center gap-2 rounded-full px-6"
+          >
+            <Star size={18} className={showOnlyStarred ? "fill-current" : ""} />
+            {showOnlyStarred ? "Show All Terms" : "Show Only Starred"}
+          </Button>
+        </div>
+
         <div className="bg-white w-full max-w-4xl rounded-2xl shadow-lg p-8 pb-16 flex flex-col items-center">
           {!isFinished ? (
             <>

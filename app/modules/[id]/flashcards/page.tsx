@@ -29,6 +29,7 @@ export default function FlashcardsClient() {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [showOnlyStarred, setShowOnlyStarred] = useState(false);
   const initializeRef = useRef(false);
   const [, startTransition] = useTransition();
 
@@ -50,13 +51,13 @@ export default function FlashcardsClient() {
   }, [moduleData, startTransition]);
 
   useEffect(() => {
-    // Reset index and flip when data changes
+    // Reset index and flip when data changes or filter changes
     startTransition(() => {
       setIndex(0);
       setFlipped(false);
       setShowHint(false);
     });
-  }, [terms, startTransition]);
+  }, [terms, showOnlyStarred, startTransition]);
 
   const toggleStar = (term: Term) => {
     updateTerm.mutate({
@@ -90,10 +91,22 @@ export default function FlashcardsClient() {
     speechSynthesis.speak(utter);
   };
 
-  const current = useMemo(() => terms[index], [terms, index]);
+  const filteredTerms = useMemo(() => {
+    if (showOnlyStarred) {
+      return terms.filter((term) => term.isStarred);
+    }
+    return terms;
+  }, [terms, showOnlyStarred]);
+
+  const current = useMemo(() => filteredTerms[index], [filteredTerms, index]);
 
   if (loading) return <p className="text-center mt-20">Loading terms...</p>;
-  if (!current) return <p className="text-center mt-20">No terms found</p>;
+  if (!current)
+    return (
+      <p className="text-center mt-20">
+        {showOnlyStarred ? "No starred terms found" : "No terms found"}
+      </p>
+    );
 
   return (
     <>
@@ -106,6 +119,21 @@ export default function FlashcardsClient() {
         )}
         <div className="flex flex-col items-center">
           <hr className=" w-full max-w-4xl mb-8 border-gray-300" />
+
+          {/* Filter Button */}
+          <div className="w-full max-w-4xl mb-6 flex justify-end">
+            <Button
+              variant={showOnlyStarred ? "default" : "outline"}
+              onClick={() => setShowOnlyStarred(!showOnlyStarred)}
+              className="flex items-center gap-2 rounded-full px-6"
+            >
+              <Star
+                size={18}
+                className={showOnlyStarred ? "fill-current" : ""}
+              />
+              {showOnlyStarred ? "Show All Terms" : "Show Only Starred"}
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col items-center justify-start pt-10 p-6 flex-1">
@@ -241,7 +269,7 @@ export default function FlashcardsClient() {
               onClick={() => {
                 setFlipped(false);
                 setShowHint(false);
-                setIndex((i) => Math.min(terms.length - 1, i + 1));
+                setIndex((i) => Math.min(filteredTerms.length - 1, i + 1));
               }}
             >
               <span className="flex gap-x-2 items-center">
