@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Imba learn
 
-## Getting Started
+This app is a Quizlet-inspired study tool. The app lets you create and manage study modules, add terms, and practice with flashcards, quizzes, tests, and a learn flow. It connects to the hosted API at `https://imba-server.up.railway.app` using cookie-based login. The website is deployed at `https://imba-learn.vercel.app`
 
-First, run the development server:
+### What You Can Do
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Sign up and log in.
+- Create your own modules with titles, descriptions, and privacy toggles.
+- Add, edit, star, and delete terms inside a module.
+- Study in multiple modes: flashcards, quiz, and test.
+- Browse your dashboard for personal modules and a community tab for shared sets.
+- Update account details (profile info, password) or delete your account.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Project Goal
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Provide a focused, modern reimagining of Quizlet: fast navigation, clear UI, and practice modes that make repetition and recall easy.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Quick Start
 
-## Learn More
+- Install deps: `npm install`
+- Run dev server: `npm run dev`
+- App runs at `http://localhost:3000`
 
-To learn more about Next.js, take a look at the following resources:
+The API base URL lives in `lib/axios.ts`. Change it if you point to a different backend; keep cookies enabled so login works.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### A Peek at the Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Built with Next.js App Router, React, and TypeScript.
+- Styling with Tailwind CSS and Radix UI building blocks.
+- Forms and validation with React Hook Form + Zod.
+- Data fetching with TanStack Query and Axios (requests include credentials for auth).
 
-## Deploy on Vercel
+### Structure (simple view)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `app/` – routes for auth, dashboard, modules, and study modes.
+- `components/` – shared UI, module cards, dialogs, forms, settings pieces.
+- `contexts/` – auth context.
+- `lib/` – API client, REST helpers, auth utilities, hooks, providers.
+- `public/` – static assets.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Deployment
+
+1. `npm run build`
+2. `npm run start` in production mode.
+
